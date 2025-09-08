@@ -58,6 +58,7 @@ export function LoginForm() {
         router.refresh();
       } else {
         setError(result.error);
+        form.setValue('password', '');
       }
     });
   };
@@ -79,7 +80,7 @@ export function LoginForm() {
               <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="e.g., admin" 
+                  placeholder="e.g., admin or user1" 
                   {...field} 
                   onChange={(e) => {
                     field.onChange(e);
@@ -120,7 +121,11 @@ export function LoginForm() {
           />
         )}
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? <Loader2 className="animate-spin" /> : <LogIn />}
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <LogIn className="mr-2 h-4 w-4" />
+          )}
           Log In
         </Button>
       </form>
