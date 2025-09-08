@@ -3,6 +3,7 @@ import { ConfigForm } from '@/components/config/config-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function ConfigurationPage() {
+  // Admin loads the default configuration to edit.
   const config = await getConfiguration();
 
   return (
