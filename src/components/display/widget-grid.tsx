@@ -5,6 +5,7 @@ import { GaugeChart } from './gauge-chart';
 import { LineChartComponent } from './line-chart';
 import { StatCard } from './stat-card';
 import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { BarChartComponent } from './bar-chart';
 
 type WidgetGridProps = {
   parameters: Parameter[];
@@ -19,6 +20,8 @@ export function WidgetGrid({ parameters }: WidgetGridProps) {
         return <LineChartComponent parameter={param} />;
       case 'stat':
         return <StatCard parameter={param} />;
+      case 'bar':
+        return <BarChartComponent parameter={param} />;
       default:
         return (
           <Card>

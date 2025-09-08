@@ -27,7 +27,7 @@ export function GaugeChart({ parameter }: GaugeChartProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const chartData = [{ name: parameter.name, value: value, fill: 'hsl(var(--primary))' }];
+  const chartData = [{ name: parameter.name, value: value, fill: 'hsl(var(--chart-1))' }];
   const chartConfig = {
     value: { label: parameter.name },
   };

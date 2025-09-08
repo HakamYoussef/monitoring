@@ -3,15 +3,14 @@
 import { useTransition } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Config, ConfigSchema, Parameter } from '@/lib/types';
+import { Config, ConfigSchema } from '@/lib/types';
 import { saveConfiguration } from '@/actions/config';
-import { suggestConfiguration } from '@/ai/flows/suggest-configuration';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Trash2, Wand2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 
@@ -22,14 +21,13 @@ type ConfigFormProps = {
 export function ConfigForm({ initialConfig }: ConfigFormProps) {
   const { toast } = useToast();
   const [isSaving, startSavingTransition] = useTransition();
-  const [isSuggesting, startSuggestingTransition] = useTransition();
 
   const form = useForm<Config>({
     resolver: zodResolver(ConfigSchema),
     defaultValues: initialConfig,
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'parameters',
   });
@@ -59,51 +57,6 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
       unit: '',
       description: '',
       displayType: 'stat',
-    });
-  };
-
-  const handleSuggestConfig = () => {
-    const currentParams = form.getValues('parameters');
-    if(currentParams.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Parameters',
-        description: 'Please add at least one parameter before suggesting a configuration.',
-      });
-      return;
-    }
-    
-    startSuggestingTransition(async () => {
-      try {
-        const suggestion = await suggestConfiguration({
-          parameters: currentParams.map(({ name, unit, description }) => ({ name: name || '', unit: unit || '', description: description || '' })),
-        });
-        
-        suggestion.configuration.forEach((suggestedParam, index) => {
-          if (index < currentParams.length) {
-            const displayType = suggestedParam.displayType.toLowerCase().includes('gauge') ? 'gauge' 
-              : suggestedParam.displayType.toLowerCase().includes('line') ? 'line'
-              : 'stat';
-
-            update(index, {
-              ...currentParams[index],
-              displayType: displayType as Parameter['displayType'],
-            });
-          }
-        });
-
-        toast({
-          title: 'Configuration Suggested',
-          description: 'AI has suggested a new display configuration.',
-        });
-
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'AI Suggestion Failed',
-          description: 'Could not get suggestions. Please try again.',
-        });
-      }
     });
   };
 
@@ -172,6 +125,7 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
                           <SelectItem value="stat">Stat Card</SelectItem>
                           <SelectItem value="gauge">Gauge Chart</SelectItem>
                           <SelectItem value="line">Line Chart</SelectItem>
+                          <SelectItem value="bar">Bar Chart</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -196,14 +150,6 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
           <Button type="button" variant="outline" onClick={handleAddParameter}>
             <Plus className="mr-2 h-4 w-4" />
             Add Parameter
-          </Button>
-          <Button type="button" onClick={handleSuggestConfig} disabled={isSuggesting || fields.length === 0}>
-            {isSuggesting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Wand2 className="mr-2 h-4 w-4" />
-            )}
-            Suggest with AI
           </Button>
         </div>
         

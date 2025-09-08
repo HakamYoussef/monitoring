@@ -5,7 +5,7 @@ export const ParameterSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   unit: z.string().optional(),
   description: z.string().optional(),
-  displayType: z.enum(['gauge', 'line', 'stat']).default('stat'),
+  displayType: z.enum(['gauge', 'line', 'stat', 'bar']).default('stat'),
 });
 
 export type Parameter = z.infer<typeof ParameterSchema>;

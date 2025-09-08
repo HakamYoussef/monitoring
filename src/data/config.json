@@ -1,0 +1,25 @@
+{
+  "parameters": [
+    {
+      "id": "845b5d46-b38f-4684-bd0d-f88b5ee2d83d",
+      "name": "radiation",
+      "unit": "cps",
+      "description": "",
+      "displayType": "stat"
+    },
+    {
+      "id": "abd8f3a1-b7c4-439e-a48e-126cc97bbe8e",
+      "name": "temperature ",
+      "unit": "C",
+      "description": "",
+      "displayType": "gauge"
+    },
+    {
+      "id": "1563e8d7-a1ec-48f4-ae63-c91f6821e8e0",
+      "name": "humidity",
+      "unit": "%",
+      "description": "",
+      "displayType": "line"
+    }
+  ]
+}
