@@ -126,6 +126,7 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
                           <SelectItem value="gauge">Gauge Chart</SelectItem>
                           <SelectItem value="line">Line Chart</SelectItem>
                           <SelectItem value="bar">Bar Chart</SelectItem>
+                          <SelectItem value="progress">Progress Bar</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -6,6 +6,7 @@ import { LineChartComponent } from './line-chart';
 import { StatCard } from './stat-card';
 import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { BarChartComponent } from './bar-chart';
+import { ProgressBar } from './progress-bar';
 
 type WidgetGridProps = {
   parameters: Parameter[];
@@ -22,6 +23,8 @@ export function WidgetGrid({ parameters }: WidgetGridProps) {
         return <StatCard parameter={param} />;
       case 'bar':
         return <BarChartComponent parameter={param} />;
+      case 'progress':
+        return <ProgressBar parameter={param} />;
       default:
         return (
           <Card>
