@@ -4,7 +4,7 @@ import { useTransition } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Config, ConfigSchema } from '@/lib/types';
-import { saveConfiguration } from '@/actions/config';
+import { createConfiguration, saveConfiguration } from '@/actions/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,18 +13,26 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { useRouter } from 'next/navigation';
 
 type ConfigFormProps = {
-  initialConfig: Config;
+  initialConfig?: Config;
+  isCreating: boolean;
 };
 
-export function ConfigForm({ initialConfig }: ConfigFormProps) {
+export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
   const { toast } = useToast();
   const [isSaving, startSavingTransition] = useTransition();
+  const router = useRouter();
 
   const form = useForm<Config>({
     resolver: zodResolver(ConfigSchema),
-    defaultValues: initialConfig,
+    defaultValues:
+      initialConfig ||
+      {
+        name: '',
+        parameters: [],
+      },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -34,12 +42,17 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
 
   const onSubmit = (data: Config) => {
     startSavingTransition(async () => {
-      const result = await saveConfiguration(data);
+      const action = isCreating ? createConfiguration : saveConfiguration;
+      const result = await action(data);
+
       if (result.success) {
         toast({
           title: 'Configuration Saved',
-          description: 'Your display configuration has been updated successfully.',
+          description: `The configuration "${data.name}" has been saved successfully.`,
         });
+        // Redirect to the hub page after saving
+        router.push('/config');
+        router.refresh();
       } else {
         toast({
           variant: 'destructive',
@@ -70,10 +83,10 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
             <FormItem>
               <FormLabel>Configuration Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Main Dashboard" {...field} />
+                <Input placeholder="e.g., Main Dashboard" {...field} disabled={!isCreating} />
               </FormControl>
               <FormDescription>
-                A unique name for this set of parameters.
+                A unique name for this set of parameters. Cannot be changed after creation.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -172,10 +185,13 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
           </Button>
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+           <Button type="button" variant="outline" onClick={() => router.push('/config')}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Configuration
+            {isCreating ? 'Create Configuration' : 'Save Changes'}
           </Button>
         </div>
       </form>
