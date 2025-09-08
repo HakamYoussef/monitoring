@@ -55,7 +55,7 @@ export function LoginForm() {
       if (result.success) {
         await createSession(result.user);
         router.push('/');
-        router.refresh();
+        // No need to call router.refresh(), middleware will handle redirection if needed.
       } else {
         setError(result.error);
         form.setValue('password', '');
