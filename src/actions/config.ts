@@ -23,7 +23,7 @@ export async function getConfiguration(): Promise<Config> {
     return config;
   } catch (error) {
     // If file doesn't exist or is empty/invalid, return a default empty config
-    return { parameters: [] };
+    return { name: 'Default Configuration', parameters: [] };
   }
 }
 

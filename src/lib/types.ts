@@ -11,6 +11,7 @@ export const ParameterSchema = z.object({
 export type Parameter = z.infer<typeof ParameterSchema>;
 
 export const ConfigSchema = z.object({
+  name: z.string().min(1, 'Configuration name is required.'),
   parameters: z.array(ParameterSchema),
 });
 

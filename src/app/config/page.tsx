@@ -11,7 +11,7 @@ export default async function ConfigurationPage() {
         <CardHeader>
           <CardTitle>Display Configuration</CardTitle>
           <CardDescription>
-            Add, edit, and manage the parameters to be displayed on your dashboard.
+            Manage the name and parameters to be displayed on your dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>

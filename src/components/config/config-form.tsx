@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 
 type ConfigFormProps = {
   initialConfig: Config;
@@ -63,6 +63,22 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Configuration Name</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Main Dashboard" {...field} />
+              </FormControl>
+              <FormDescription>
+                A unique name for this set of parameters.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="space-y-4">
           {fields.map((field, index) => (
             <Card key={field.id} className="relative">
