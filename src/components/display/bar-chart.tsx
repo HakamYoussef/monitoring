@@ -13,7 +13,7 @@ type BarChartComponentProps = {
 const MAX_DATA_POINTS = 10;
 const generateInitialData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
   name: `Point ${i + 1}`,
-  value: 0,
+  value: Math.random() * 80 + 10,
 }));
 
 export function BarChartComponent({ parameter }: BarChartComponentProps) {
@@ -24,8 +24,7 @@ export function BarChartComponent({ parameter }: BarChartComponentProps) {
       name: `Point ${i + 1}`,
       value: Math.random() * 80 + 10,
     }));
-    setData(generateRandomData());
-
+    
     const interval = setInterval(() => {
       setData(generateRandomData());
     }, 3000 + Math.random() * 1000);

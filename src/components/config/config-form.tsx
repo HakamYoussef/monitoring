@@ -123,10 +123,12 @@ export function ConfigForm({ initialConfig }: ConfigFormProps) {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="stat">Stat Card</SelectItem>
-                          <SelectItem value="gauge">Gauge Chart</SelectItem>
+                          <SelectItem value="radial-gauge">Radial Gauge</SelectItem>
+                          <SelectItem value="linear-gauge">Linear Gauge</SelectItem>
                           <SelectItem value="line">Line Chart</SelectItem>
                           <SelectItem value="bar">Bar Chart</SelectItem>
                           <SelectItem value="progress">Progress Bar</SelectItem>
+                          <SelectItem value="status-light">Status Light</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

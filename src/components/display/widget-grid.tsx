@@ -1,12 +1,14 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { GaugeChart } from './gauge-chart';
+import { RadialGauge } from './gauge-chart';
 import { LineChartComponent } from './line-chart';
 import { StatCard } from './stat-card';
 import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { BarChartComponent } from './bar-chart';
 import { ProgressBar } from './progress-bar';
+import { LinearGauge } from './linear-gauge';
+import { StatusLight } from './status-light';
 
 type WidgetGridProps = {
   parameters: Parameter[];
@@ -15,8 +17,8 @@ type WidgetGridProps = {
 export function WidgetGrid({ parameters }: WidgetGridProps) {
   const renderWidget = (param: Parameter) => {
     switch (param.displayType) {
-      case 'gauge':
-        return <GaugeChart parameter={param} />;
+      case 'radial-gauge':
+        return <RadialGauge parameter={param} />;
       case 'line':
         return <LineChartComponent parameter={param} />;
       case 'stat':
@@ -25,6 +27,10 @@ export function WidgetGrid({ parameters }: WidgetGridProps) {
         return <BarChartComponent parameter={param} />;
       case 'progress':
         return <ProgressBar parameter={param} />;
+      case 'linear-gauge':
+        return <LinearGauge parameter={param} />;
+      case 'status-light':
+        return <StatusLight parameter={param} />;
       default:
         return (
           <Card>

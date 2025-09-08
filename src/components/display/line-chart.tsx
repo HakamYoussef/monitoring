@@ -12,21 +12,19 @@ type LineChartComponentProps = {
 
 const MAX_DATA_POINTS = 20;
 
-const generateInitialData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-  time: i,
-  value: 0,
-}));
+const generateInitialData = () => {
+    const randomData = Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+      time: i,
+      value: Math.random() * 20 + 40,
+    }));
+    return randomData;
+}
+
 
 export function LineChartComponent({ parameter }: LineChartComponentProps) {
   const [data, setData] = useState(generateInitialData);
 
   useEffect(() => {
-    const randomData = Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-      time: i,
-      value: Math.random() * 20 + 40,
-    }));
-    setData(randomData);
-
     const interval = setInterval(() => {
       setData((prevData) => {
         const lastValue = prevData[prevData.length - 1]?.value || 50;

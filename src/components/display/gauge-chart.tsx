@@ -1,20 +1,22 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from 'recharts';
 
-type GaugeChartProps = {
+type RadialGaugeProps = {
   parameter: Parameter;
 };
 
-export function GaugeChart({ parameter }: GaugeChartProps) {
+export function RadialGauge({ parameter }: RadialGaugeProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    setValue(50);
+    const initialValue = 50 + (Math.random() - 0.5) * 40;
+    setValue(initialValue);
+
     const interval = setInterval(() => {
       setValue((prevValue) => {
         const change = (Math.random() - 0.5) * 10;
@@ -28,86 +30,77 @@ export function GaugeChart({ parameter }: GaugeChartProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const chartData = [
-    { name: 'value', value: value, fill: 'var(--color-value)' },
+  const chartData = [{ name: 'value', value, fill: 'hsl(var(--primary))' }];
+  const max = 100;
+  const percentage = (value / max) * 100;
+
+  const colorStops = [
+    { offset: "0%", color: "hsl(140, 80%, 40%)" },
+    { offset: "25%", color: "hsl(140, 80%, 40%)" },
+    { offset: "35%", color: "hsl(48, 100%, 50%)" },
+    { offset: "75%", color: "hsl(24, 100%, 50%)" },
+    { offset: "100%", color: "hsl(0, 100%, 50%)" },
   ];
-
-  const chartConfig = {
-    value: {
-      label: parameter.name,
-      color: 'hsl(var(--foreground))',
-    },
-    green: { color: 'hsl(140, 80%, 40%)' },
-    yellow: { color: 'hsl(48, 100%, 50%)' },
-    orange: { color: 'hsl(24, 100%, 50%)' },
-    red: { color: 'hsl(0, 100%, 50%)' },
-  };
-
+  
   return (
     <Card>
-      <CardHeader className="items-center pb-2">
+      <CardHeader className="items-center pb-0">
         <CardTitle>{parameter.name}</CardTitle>
+        <CardDescription>{parameter.description}</CardDescription>
       </CardHeader>
-      <CardContent className="pb-0">
+      <CardContent className="pb-4">
         <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square h-[200px]"
+          config={{
+            value: {
+              label: parameter.name,
+              color: 'hsl(var(--foreground))',
+            },
+          }}
+          className="mx-auto aspect-square h-[220px]"
         >
-          <RadarChart
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            outerRadius="80%"
-            startAngle={180}
-            endAngle={0}
-          >
-            <PolarGrid
-              gridType="polygon"
-              radialLines={false}
-              polarRadius={[0, 25, 50, 75, 100].map(
-                (r) => (r * 80) / 100
-              )}
-              className="fill-muted"
-            />
-            <PolarAngleAxis dataKey="name" tick={false} />
-
-            <Radar
-              dataKey="value"
-              stroke="var(--color-value)"
-              fill="var(--color-value)"
-              fillOpacity={0.6}
-            />
-
-            <g transform="translate(100, 100)">
-              <circle r="72" fill="hsl(140, 80%, 40%)" clipPath="url(#clip-green)" />
-              <circle r="72" fill="hsl(48, 100%, 50%)" clipPath="url(#clip-yellow)" />
-              <circle r="72" fill="hsl(24, 100%, 50%)" clipPath="url(#clip-orange)" />
-              <circle r="72" fill="hsl(0, 100%, 50%)" clipPath="url(#clip-red)" />
-              
-              <path d="M -70 0 A 70 70 0 0 1 70 0" stroke="hsl(var(--border))" strokeWidth="1" fill="none" />
-              
-              <circle r="60" fill="hsl(var(--card))" />
-              
-              <g transform={`rotate(${(value / 100) * 180 - 90})`}>
-                <polygon points="0,-5 0,5 -55,0" fill="hsl(var(--foreground))" />
-                <circle cx="0" cy="0" r="7" fill="hsl(var(--foreground))" />
-              </g>
-
-              <text x="0" y="40" textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-3xl font-bold">
-                {value.toFixed(1)}
-              </text>
-              <text x="0" y="60" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground">
-                {parameter.unit}
-              </text>
-            </g>
-
+          <svg width="100%" height="100%" viewBox="-10 -15 220 130">
             <defs>
-              <clipPath id="clip-green"><path d="M -72 0 A 72 72 0 0 1 -36 -62.35 L -30 -51.96 A 60 60 0 0 0 -60 0 Z" /></clipPath>
-              <clipPath id="clip-yellow"><path d="M -36 -62.35 A 72 72 0 0 1 36 -62.35 L 30 -51.96 A 60 60 0 0 0 -30 -51.96 Z" /></clipPath>
-              <clipPath id="clip-orange"><path d="M 36 -62.35 A 72 72 0 0 1 72 0 L 60 0 A 60 60 0 0 0 30 -51.96 Z" /></clipPath>
-              <clipPath id="clip-red"><path d="M 72 0 A 72 72 0 0 1 36 62.35 L 30 51.96 A 60 60 0 0 0 60 0 Z" /></clipPath>
+              <linearGradient id="gaugeGradient" x1="0" y1="0" x2="1" y2="0">
+                {colorStops.map((stop, index) => (
+                  <stop key={index} offset={stop.offset} stopColor={stop.color} />
+                ))}
+              </linearGradient>
             </defs>
-          </RadarChart>
+            <path
+              d="M 10 100 A 90 90 0 0 1 190 100"
+              stroke="hsl(var(--muted))"
+              strokeWidth="20"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <path
+              d="M 10 100 A 90 90 0 0 1 190 100"
+              stroke="url(#gaugeGradient)"
+              strokeWidth="20"
+              strokeLinecap="round"
+              fill="none"
+              strokeDasharray={`${(percentage / 100) * 282.74} 282.74`}
+            />
+
+            <text
+              x="100"
+              y="85"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-foreground text-4xl font-bold"
+            >
+              {value.toFixed(1)}
+            </text>
+            <text
+              x="100"
+              y="110"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-muted-foreground text-lg"
+            >
+              {parameter.unit}
+            </text>
+          </svg>
         </ChartContainer>
       </CardContent>
     </Card>
