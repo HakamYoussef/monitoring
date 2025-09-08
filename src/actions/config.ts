@@ -92,6 +92,10 @@ export async function deleteConfiguration(configName: string): Promise<{ success
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {
+      // Check if the error is because the file doesn't exist
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return { success: false, error: `Configuration '${configName}' not found.` };
+      }
       return { success: false, error: error.message };
     }
     return { success: false, error: 'An unknown error occurred.' };
