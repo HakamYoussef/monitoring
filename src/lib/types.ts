@@ -16,12 +16,3 @@ export const ConfigSchema = z.object({
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
-
-// Auth types
-export const UserSessionSchema = z.object({
-  username: z.string(),
-  role: z.enum(['admin', 'user']),
-  project: z.string().optional(),
-});
-
-export type UserSession = z.infer<typeof UserSessionSchema>;

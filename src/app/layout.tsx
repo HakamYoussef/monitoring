@@ -3,7 +3,6 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/common/header';
 import { Toaster } from "@/components/ui/toaster"
-import { getSession } from '@/lib/session';
 
 export const metadata: Metadata = {
   title: 'ConfigDisplay',
@@ -15,11 +14,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-
-  // Do not render header on login page
-  const showHeader = !!session;
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -29,7 +23,7 @@ export default async function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <div className="relative flex min-h-screen flex-col">
-          {showHeader && <AppHeader user={session} />}
+          <AppHeader />
           <main className="flex-1">{children}</main>
         </div>
         <Toaster />
