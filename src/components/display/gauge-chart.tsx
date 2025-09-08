@@ -11,9 +11,10 @@ type GaugeChartProps = {
 };
 
 export function GaugeChart({ parameter }: GaugeChartProps) {
-  const [value, setValue] = useState(50);
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
+    setValue(50);
     const interval = setInterval(() => {
       setValue((prevValue) => {
         const change = (Math.random() - 0.5) * 10;

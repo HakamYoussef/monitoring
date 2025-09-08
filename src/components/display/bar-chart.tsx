@@ -11,23 +11,23 @@ type BarChartComponentProps = {
 };
 
 const MAX_DATA_POINTS = 10;
+const generateInitialData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+  name: `Point ${i + 1}`,
+  value: 0,
+}));
 
 export function BarChartComponent({ parameter }: BarChartComponentProps) {
-  const [data, setData] = useState(() =>
-    Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-      name: `Point ${i + 1}`,
-      value: Math.random() * 80 + 10,
-    }))
-  );
+  const [data, setData] = useState(generateInitialData);
 
   useEffect(() => {
+    const generateRandomData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+      name: `Point ${i + 1}`,
+      value: Math.random() * 80 + 10,
+    }));
+    setData(generateRandomData());
+
     const interval = setInterval(() => {
-      setData(
-        Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-          name: `Point ${i + 1}`,
-          value: Math.random() * 80 + 10,
-        }))
-      );
+      setData(generateRandomData());
     }, 3000 + Math.random() * 1000);
 
     return () => clearInterval(interval);

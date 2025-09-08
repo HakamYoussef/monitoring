@@ -20,6 +20,13 @@
       "unit": "%",
       "description": "",
       "displayType": "line"
+    },
+    {
+      "id": "c8fb6d33-d1c5-4d48-a416-136799b72565",
+      "name": "pir",
+      "unit": "X",
+      "description": "",
+      "displayType": "progress"
     }
   ]
 }
