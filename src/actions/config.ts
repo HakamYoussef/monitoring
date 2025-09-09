@@ -41,7 +41,7 @@ export async function getConfigurationNames(): Promise<string[]> {
   try {
     const files = await fs.readdir(dataDirPath);
     return files
-      .filter((file) => file.endsWith('.json'))
+      .filter((file) => file.endsWith('.json') && file !== 'users.json') // Exclude users.json
       .map((file) => file.replace(/\.json$/, ''));
   } catch (error) {
     console.error('Failed to get configuration names:', error);
