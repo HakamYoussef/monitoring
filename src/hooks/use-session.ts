@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSession, SessionData } from '@/lib/session';
+import { getSession } from '@/actions/auth';
+import { SessionData } from '@/lib/session';
+
 
 export function useSession() {
   const [session, setSession] = useState<SessionData | null>(null);
@@ -10,7 +12,6 @@ export function useSession() {
   useEffect(() => {
     async function fetchSession() {
       try {
-        // This is a server action, but we can call it from the client
         const sessionData = await getSession();
         setSession(sessionData);
       } catch (error) {
