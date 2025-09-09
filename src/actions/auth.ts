@@ -71,6 +71,8 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
       return { success: false, error: 'Invalid username or password.' };
     }
 
+    // In a real app, you should use a password hashing library like bcrypt.
+    // For this demo, we are comparing plain text passwords.
     const isPasswordValid = user.password === password;
 
     if (!isPasswordValid) {
