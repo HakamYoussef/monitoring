@@ -11,15 +11,21 @@ type StatCardProps = {
 };
 
 export function StatCard({ parameter }: StatCardProps) {
-  const [value, setValue] = useState(50 + (Math.random() - 0.5) * 40);
-  const [previousValue, setPreviousValue] = useState(value);
+  const [value, setValue] = useState<number | null>(null);
+  const [previousValue, setPreviousValue] = useState<number | null>(null);
 
   useEffect(() => {
+    // Set initial value only on the client
+    const initialValue = 50 + (Math.random() - 0.5) * 40;
+    setValue(initialValue);
+    setPreviousValue(initialValue);
+
     const interval = setInterval(() => {
       setValue((currentValue) => {
-        setPreviousValue(currentValue);
+        const prev = currentValue ?? initialValue;
+        setPreviousValue(prev);
         const change = (Math.random() - 0.5) * 10;
-        let newValue = currentValue + change;
+        let newValue = prev + change;
         if (newValue < 0) newValue = 0;
         if (newValue > 100) newValue = 100;
         return newValue;
@@ -28,6 +34,18 @@ export function StatCard({ parameter }: StatCardProps) {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (value === null || previousValue === null) {
+    return (
+      <WidgetCardWrapper
+        title={parameter.name}
+        description={parameter.description}
+        contentClassName="flex flex-col items-center justify-center"
+      >
+        <p className="font-bold text-4xl">--.-</p>
+      </WidgetCardWrapper>
+    );
+  }
 
   const trend = value > previousValue ? 'up' : value < previousValue ? 'down' : 'neutral';
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;

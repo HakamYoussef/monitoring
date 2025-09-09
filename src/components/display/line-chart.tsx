@@ -21,11 +21,15 @@ const generateInitialData = () => {
 };
 
 export function LineChartComponent({ parameter }: LineChartComponentProps) {
-  const [data, setData] = useState(generateInitialData);
+  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
+    setData(generateInitialData());
+
     const interval = setInterval(() => {
       setData((prevData) => {
+        if (prevData.length === 0) return generateInitialData();
+        
         const lastValue = prevData[prevData.length - 1]?.value || 50;
         const change = (Math.random() - 0.5) * 5;
         let newValue = lastValue + change;
