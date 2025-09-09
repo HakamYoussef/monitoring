@@ -55,7 +55,7 @@ export function RadialGauge({ parameter }: RadialGaugeProps) {
         config={{
           value: { label: parameter.name },
         }}
-        className="mx-auto aspect-square max-h-[250px] w-full"
+        className="mx-auto aspect-square h-full w-auto max-w-full"
       >
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           <circle

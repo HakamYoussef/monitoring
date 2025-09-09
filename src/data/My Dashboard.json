@@ -20,7 +20,7 @@
       "name": "Memory Usage",
       "unit": "GB",
       "description": "RAM currently in use",
-      "displayType": "line"
+      "displayType": "linear-gauge"
     },
     {
       "id": "c8fb6d33-d1c5-4d48-a416-136799b72565",
