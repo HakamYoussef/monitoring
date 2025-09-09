@@ -24,6 +24,7 @@ export async function getSession(): Promise<SessionData> {
     return validation.data;
   }
 
+  // If the session is uninitialized or invalid, return a default session object
   return SessionDataSchema.parse({});
 }
 
