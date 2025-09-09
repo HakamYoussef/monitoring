@@ -80,7 +80,7 @@ export function AuthForm() {
                 disabled={isLoading}
               />
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.form_state.errors.password.message}</p>
+                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
             </div>
           </CardContent>

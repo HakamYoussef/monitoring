@@ -35,12 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     const result = await apiLogin(email, password);
     if (result.success && result.user) {
       sessionStorage.setItem('user', JSON.stringify(result.user));
       setUser(result.user);
-      router.push('/dashboard');
-      router.refresh();
+      // On successful login, go to the main dashboard/config entry point
+      router.push('/dashboard'); 
+      router.refresh(); // Force a refresh to ensure layout reflects login state
+    } else {
+      setIsLoading(false);
     }
     return { success: result.success, error: result.error };
   };

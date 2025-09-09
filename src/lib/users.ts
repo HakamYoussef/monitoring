@@ -1,113 +1,26 @@
 
 'use server';
 
-import { z } from 'zod';
-import fs from 'fs/promises';
-import path from 'path';
-import type { User, UserData, SignupData } from './types';
-import { SignupSchema, UserSchema } from './types';
-
+import type { UserData } from './types';
 
 // In a real app, this would be a database, and passwords would be hashed.
-// For this demo, we're storing data in a local JSON file.
-
-const usersFilePath = path.join(process.cwd(), 'src', 'data', 'users.json');
-
-
-async function readUsers(): Promise<User[]> {
-  try {
-    // Ensure the data directory exists
-    await fs.mkdir(path.dirname(usersFilePath), { recursive: true });
-    const data = await fs.readFile(usersFilePath, 'utf-8');
-    const users = JSON.parse(data);
-    // Zod validation for the array of users
-    z.array(UserSchema).parse(users);
-    return users;
-  } catch (error) {
-    // If the file doesn't exist or is invalid, create it with a default user
-    if (error instanceof SyntaxError || (error as NodeJS.ErrnoException).code === 'ENOENT') {
-        const defaultUser: User = {
-          id: '1',
-          email: 'demo@example.com',
-          password: 'password',
-          accessibleDashboards: ['My Dashboard'],
-        };
-        await writeUsers([defaultUser]);
-        return [defaultUser];
-    }
-    // Re-throw other errors
-    throw error;
-  }
-}
-
-async function writeUsers(users: User[]): Promise<void> {
-  await fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
-}
-
-/**
- * Returns all users without their passwords.
- */
-export async function getUsers(): Promise<UserData[]> {
-    const users = await readUsers();
-    return users.map(({ password, ...userData }) => userData);
-}
-
+// For this demo, we're just checking against a hardcoded user.
+const FAKE_USER: UserData & { password: string } = {
+  id: '1',
+  email: 'demo@example.com',
+  password: 'password',
+};
 
 export async function login(email: string, password: string): Promise<{ success: boolean; user?: UserData; error?: string }> {
-  const users = await readUsers();
-  const user = users.find((u) => u.email === email);
-
-  if (!user) {
-    return { success: false, error: 'User not found.' };
+  if (email.toLowerCase() !== FAKE_USER.email || password !== FAKE_USER.password) {
+    return { success: false, error: 'Invalid email or password.' };
   }
 
-  // IMPORTANT: In a real application, NEVER store plain text passwords.
-  // Always hash passwords and compare the hash.
-  if (user.password !== password) {
-    return { success: false, error: 'Invalid password.' };
-  }
-
-  const { password: _, ...userData } = user;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: _, ...userData } = FAKE_USER;
+  
   return { success: true, user: userData };
 }
-
-export async function createUser(data: SignupData): Promise<{ success: boolean; user?: UserData; error?: string }> {
-    const validation = SignupSchema.safeParse(data);
-    if (!validation.success) {
-        return { success: false, error: validation.error.issues.map(i => i.message).join(', ') };
-    }
-    
-    const users = await readUsers();
-    const existingUser = users.find(u => u.email === data.email);
-    if (existingUser) {
-        return { success: false, error: 'A user with this email already exists.' };
-    }
-
-    const newUser: User = {
-        id: crypto.randomUUID(),
-        ...data,
-    };
-
-    users.push(newUser);
-    await writeUsers(users);
-    
-    const { password, ...userData } = newUser;
-
-    return { success: true, user: userData };
-}
-
-export async function deleteUser(userId: string): Promise<{ success: boolean, error?: string}> {
-    const users = await readUsers();
-    const newUsers = users.filter(u => u.id !== userId);
-
-    if (users.length === newUsers.length) {
-        return { success: false, error: `User with ID ${userId} not found.`};
-    }
-
-    await writeUsers(newUsers);
-    return { success: true };
-}
-
 
 export async function logout(): Promise<{ success: boolean }> {
   // In a real app, you might invalidate a session token on the server.
