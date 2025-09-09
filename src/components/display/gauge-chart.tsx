@@ -8,11 +8,9 @@ import { cn } from '@/lib/utils';
 
 type RadialGaugeProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
-export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGaugeProps) {
+export function RadialGauge({ parameter }: RadialGaugeProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -33,8 +31,8 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
   }, []);
 
   const percentage = value / 100;
-  const size = isModal ? 400 : 200;
-  const strokeWidth = isModal ? 30 : 20;
+  const size = 200;
+  const strokeWidth = 20;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const arcLength = percentage * (0.75 * circumference);
@@ -50,8 +48,6 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
     <WidgetCardWrapper
       title={parameter.name}
       description={parameter.description}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       headerClassName="items-center pb-2"
       contentClassName="flex items-center justify-center"
     >
@@ -91,17 +87,17 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
             textAnchor="middle"
             dominantBaseline="middle"
             className="fill-foreground font-bold"
-            style={{ fontSize: isModal ? '4rem' : '2rem' }}
+            style={{ fontSize: '2rem' }}
           >
             {value.toFixed(1)}
           </text>
           <text
             x="50%"
-            y={isModal ? '65%' : '62%'}
+            y="62%"
             textAnchor="middle"
             dominantBaseline="middle"
             className="fill-muted-foreground"
-            style={{ fontSize: isModal ? '1.5rem' : '1rem' }}
+            style={{ fontSize: '1rem' }}
           >
             {parameter.unit}
           </text>

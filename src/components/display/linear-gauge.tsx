@@ -7,11 +7,9 @@ import { cn } from '@/lib/utils';
 
 type LinearGaugeProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
-export function LinearGauge({ parameter, onEnlarge, isModal = false }: LinearGaugeProps) {
+export function LinearGauge({ parameter }: LinearGaugeProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -40,14 +38,12 @@ export function LinearGauge({ parameter, onEnlarge, isModal = false }: LinearGau
     return 'bg-red-500';
   };
 
-  const barHeight = isModal ? 'h-10' : 'h-4';
+  const barHeight = 'h-4';
 
   return (
     <WidgetCardWrapper
       title={parameter.name}
       description={parameter.description}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       contentClassName="flex flex-col justify-center space-y-4"
     >
       <div className={cn('w-full rounded-full bg-muted', barHeight)}>
@@ -56,7 +52,7 @@ export function LinearGauge({ parameter, onEnlarge, isModal = false }: LinearGau
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-right text-muted-foreground" style={{ fontSize: isModal ? '1.5rem' : '0.875rem' }}>
+      <p className="text-right text-muted-foreground">
         {value.toFixed(1)} {parameter.unit}
       </p>
     </WidgetCardWrapper>

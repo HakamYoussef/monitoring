@@ -4,12 +4,10 @@ import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
 type LineChartComponentProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
 const MAX_DATA_POINTS = 20;
@@ -22,11 +20,10 @@ const generateInitialData = () => {
   return randomData;
 };
 
-export function LineChartComponent({ parameter, onEnlarge, isModal = false }: LineChartComponentProps) {
+export function LineChartComponent({ parameter }: LineChartComponentProps) {
   const [data, setData] = useState(generateInitialData);
 
   useEffect(() => {
-    if (isModal) return;
     const interval = setInterval(() => {
       setData((prevData) => {
         const lastValue = prevData[prevData.length - 1]?.value || 50;
@@ -46,7 +43,7 @@ export function LineChartComponent({ parameter, onEnlarge, isModal = false }: Li
     }, 2000 + Math.random() * 1000);
 
     return () => clearInterval(interval);
-  }, [isModal]);
+  }, []);
 
   const chartConfig = {
     value: {
@@ -59,22 +56,12 @@ export function LineChartComponent({ parameter, onEnlarge, isModal = false }: Li
     <WidgetCardWrapper
       title={parameter.name}
       description={`Live trend for ${parameter.name.toLowerCase()}.`}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       contentClassName="pl-0 pr-4 pb-4"
     >
       <ChartContainer config={chartConfig} className="h-full w-full">
-        <AreaChart
-          data={data}
-          margin={
-            isModal 
-            ? { top: 20, right: 20, left: 20, bottom: 20 }
-            : { top: 5, right: 10, left: 10, bottom: 0 }
-          }
-        >
+        <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
           <CartesianGrid vertical={false} />
-          <XAxis dataKey="time" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={() => (isModal ? '' : '')} />
-          {isModal && <YAxis />}
+          <XAxis dataKey="time" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={() => ''} />
           <ChartTooltip
             cursor={false}
             content={

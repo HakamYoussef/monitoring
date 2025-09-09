@@ -8,11 +8,9 @@ import { cn } from '@/lib/utils';
 
 type ProgressBarProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
-export function ProgressBar({ parameter, onEnlarge, isModal = false }: ProgressBarProps) {
+export function ProgressBar({ parameter }: ProgressBarProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -33,14 +31,9 @@ export function ProgressBar({ parameter, onEnlarge, isModal = false }: ProgressB
   }, []);
 
   return (
-    <WidgetCardWrapper
-      title={parameter.name}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
-      contentClassName="flex flex-col justify-center space-y-4"
-    >
-      <Progress value={value} className={cn(isModal ? 'h-10' : 'h-4')} />
-      <p className="text-right text-muted-foreground" style={{ fontSize: isModal ? '1.5rem' : '0.875rem' }}>
+    <WidgetCardWrapper title={parameter.name} contentClassName="flex flex-col justify-center space-y-4">
+      <Progress value={value} className="h-4" />
+      <p className="text-right text-muted-foreground">
         {value.toFixed(1)} {parameter.unit}
       </p>
     </WidgetCardWrapper>

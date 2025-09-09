@@ -4,12 +4,10 @@ import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
-import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis } from 'recharts';
 
 type BarChartComponentProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
 const MAX_DATA_POINTS = 10;
@@ -19,11 +17,10 @@ const generateInitialData = () =>
     value: Math.random() * 80 + 10,
   }));
 
-export function BarChartComponent({ parameter, onEnlarge, isModal = false }: BarChartComponentProps) {
+export function BarChartComponent({ parameter }: BarChartComponentProps) {
   const [data, setData] = useState(generateInitialData);
 
   useEffect(() => {
-    if (isModal) return;
     const generateRandomData = () =>
       Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
         name: `Point ${i + 1}`,
@@ -35,7 +32,7 @@ export function BarChartComponent({ parameter, onEnlarge, isModal = false }: Bar
     }, 3000 + Math.random() * 1000);
 
     return () => clearInterval(interval);
-  }, [isModal]);
+  }, []);
 
   const chartConfig = {
     value: {
@@ -48,27 +45,17 @@ export function BarChartComponent({ parameter, onEnlarge, isModal = false }: Bar
     <WidgetCardWrapper
       title={parameter.name}
       description={`Bar chart for ${parameter.name.toLowerCase()}.`}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       contentClassName="pl-0 pr-4 pb-4"
     >
       <ChartContainer config={chartConfig} className="h-full w-full">
         <RechartsBarChart
           accessibilityLayer
           data={data}
-          layout={isModal ? "vertical" : "horizontal"}
-          margin={
-            isModal 
-            ? { top: 20, right: 20, left: 40, bottom: 20 }
-            : { top: 5, right: 10, left: 10, bottom: 0 }
-          }
+          layout="horizontal"
+          margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
         >
-          <CartesianGrid vertical={isModal} horizontal={!isModal} />
-          {isModal ? (
-            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
-          ) : (
-            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={() => ''} />
-          )}
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={() => ''} />
           <ChartTooltip
             cursor={false}
             content={

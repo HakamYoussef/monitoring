@@ -7,11 +7,9 @@ import { cn } from '@/lib/utils';
 
 type StatusLightProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
-export function StatusLight({ parameter, onEnlarge, isModal = false }: StatusLightProps) {
+export function StatusLight({ parameter }: StatusLightProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -32,15 +30,13 @@ export function StatusLight({ parameter, onEnlarge, isModal = false }: StatusLig
   };
 
   const status = getStatus(value);
-  const lightSize = isModal ? 'h-48 w-48' : 'h-24 w-24';
-  const labelSize = isModal ? 'text-4xl' : 'text-lg';
+  const lightSize = 'h-24 w-24';
+  const labelSize = 'text-lg';
 
   return (
     <WidgetCardWrapper
       title={parameter.name}
       description={parameter.description}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       contentClassName="flex flex-col items-center justify-center space-y-4"
     >
       <div className={cn('relative', lightSize)}>

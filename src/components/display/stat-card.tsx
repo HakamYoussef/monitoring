@@ -8,11 +8,9 @@ import { cn } from '@/lib/utils';
 
 type StatCardProps = {
   parameter: Parameter;
-  onEnlarge: () => void;
-  isModal?: boolean;
 };
 
-export function StatCard({ parameter, onEnlarge, isModal = false }: StatCardProps) {
+export function StatCard({ parameter }: StatCardProps) {
   const [value, setValue] = useState(0);
   const [previousValue, setPreviousValue] = useState(0);
 
@@ -44,28 +42,24 @@ export function StatCard({ parameter, onEnlarge, isModal = false }: StatCardProp
     <WidgetCardWrapper
       title={parameter.name}
       description={parameter.description}
-      onEnlarge={onEnlarge}
-      isModal={isModal}
       contentClassName="flex flex-col items-center justify-center"
     >
       <div className="flex items-baseline">
-        <p className="font-bold" style={{ fontSize: isModal ? '8rem' : '2.25rem' }}>
+        <p className="font-bold text-4xl">
           {value.toFixed(1)}
         </p>
         <span
-          className="ml-2 text-muted-foreground"
-          style={{ fontSize: isModal ? '2rem' : '1.25rem' }}
+          className="ml-2 text-muted-foreground text-xl"
         >
           {parameter.unit}
         </span>
       </div>
       <div
         className={cn(
-          'flex items-center font-medium',
+          'flex items-center font-medium text-sm',
           trend === 'up' && 'text-green-500',
           trend === 'down' && 'text-red-500',
-          trend === 'neutral' && 'text-muted-foreground',
-          isModal ? 'text-2xl' : 'text-sm'
+          trend === 'neutral' && 'text-muted-foreground'
         )}
       >
         <TrendIcon className="mr-1 h-5 w-5" />
