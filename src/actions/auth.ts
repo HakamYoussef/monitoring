@@ -82,6 +82,8 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
       return { success: false, error: 'Invalid username or password.' };
     }
 
+    // In a real app, you would compare a hashed password.
+    // For this demo, we're doing a simple string comparison.
     const isPasswordValid = user.password === password;
 
     if (!isPasswordValid) {
