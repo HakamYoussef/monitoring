@@ -4,6 +4,7 @@ import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type RadialGaugeProps = {
   parameter: Parameter;
@@ -31,21 +32,19 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
     return () => clearInterval(interval);
   }, []);
 
-  const percentage = (value / 100) * 100;
+  const percentage = value / 100;
   const size = isModal ? 400 : 200;
   const strokeWidth = isModal ? 30 : 20;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const arcLength = (percentage / 100) * (0.75 * circumference);
+  const arcLength = percentage * (0.75 * circumference);
   const transform = `rotate(135 ${size / 2} ${size / 2})`;
 
-  const colorStops = [
-    { offset: '0%', color: 'hsl(140, 80%, 40%)' },
-    { offset: '25%', color: 'hsl(140, 80%, 40%)' },
-    { offset: '35%', color: 'hsl(48, 100%, 50%)' },
-    { offset: '75%', color: 'hsl(24, 100%, 50%)' },
-    { offset: '100%', color: 'hsl(0, 100%, 50%)' },
-  ];
+  const getColorClass = (val: number) => {
+    if (val < 40) return 'text-green-500';
+    if (val < 75) return 'text-yellow-500';
+    return 'text-red-500';
+  };
 
   return (
     <WidgetCardWrapper
@@ -58,24 +57,17 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
     >
       <ChartContainer
         config={{
-          value: { label: parameter.name, color: 'hsl(var(--foreground))' },
+          value: { label: parameter.name },
         }}
         className="mx-auto aspect-square h-full w-full"
       >
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
-          <defs>
-            <linearGradient id="gaugeGradient" x1="0" y1="0" x2="1" y2="0">
-              {colorStops.map((stop, index) => (
-                <stop key={index} offset={stop.offset} stopColor={stop.color} />
-              ))}
-            </linearGradient>
-          </defs>
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="hsl(var(--muted))"
+            className="stroke-muted"
             strokeWidth={strokeWidth}
             strokeDasharray={`${0.75 * circumference} ${circumference}`}
             transform={transform}
@@ -86,7 +78,7 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="url(#gaugeGradient)"
+            className={cn('stroke-current transition-colors duration-500', getColorClass(value))}
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             transform={transform}
@@ -105,7 +97,7 @@ export function RadialGauge({ parameter, onEnlarge, isModal = false }: RadialGau
           </text>
           <text
             x="50%"
-            y="65%"
+            y={isModal ? '65%' : '62%'}
             textAnchor="middle"
             dominantBaseline="middle"
             className="fill-muted-foreground"
