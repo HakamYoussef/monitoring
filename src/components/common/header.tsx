@@ -13,6 +13,7 @@ export function AppHeader() {
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/config', label: 'Configuration' },
+    { href: '/accounts', label: 'Accounts' },
   ];
 
   return (

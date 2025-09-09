@@ -17,3 +17,11 @@ export const ConfigSchema = z.object({
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
+
+export const UserSchema = z.object({
+  username: z.string().min(1, 'Username is required.'),
+  password: z.string().min(6, 'Password must be at least 6 characters.'),
+  dashboardName: z.string().min(1, 'A dashboard must be assigned.'),
+});
+
+export type User = z.infer<typeof UserSchema>;
