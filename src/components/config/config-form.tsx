@@ -128,9 +128,20 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
     });
   };
 
+  // Generate a unique id for a new parameter. Some environments (or older
+  // browsers) don't provide `crypto.randomUUID`, which previously resulted in a
+  // runtime error when adding a parameter. We fall back to a simple random
+  // string in those cases.
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+    return Math.random().toString(36).slice(2);
+  };
+
   const handleAddParameter = () => {
     append({
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: '',
       unit: '',
       description: '',
