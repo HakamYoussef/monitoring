@@ -1,12 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { getIronSession } from 'iron-session';
-import { cookies } from 'next/headers';
 import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { User } from '@/lib/types';
-import { SessionData, sessionOptions } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
 import { setSession, clearSession } from './session';
 
