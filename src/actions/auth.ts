@@ -54,13 +54,19 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     
     const { username, password } = validation.data;
 
-    if (isMongoConfigured()) {
-        await ensureDefaultUser();
+    // First, check if Mongo is configured. If not, we can't proceed.
+    if (!isMongoConfigured()) {
+        return { success: false, error: 'Database is not configured. Please set MONGODB_URI.' };
     }
+    
+    // Now that we know it's configured, ensure the default user exists if needed.
+    await ensureDefaultUser();
 
+    // Get the collection, which should now succeed if configured.
     const collection = await getUserCollection();
     if (!collection) {
-        return { success: false, error: 'Database is not configured.' };
+        // This case would be rare, e.g., if the connection fails mid-request
+        return { success: false, error: 'Could not connect to the database.' };
     }
 
     const user = await collection.findOne({ username });
