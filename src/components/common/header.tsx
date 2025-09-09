@@ -7,16 +7,25 @@ import { cn } from '@/lib/utils';
 import { PanelsTopLeft } from 'lucide-react';
 import { LocationTime } from './location-time';
 import { UserNav } from './user-nav';
+import { useSession } from '@/hooks/use-session';
 
 
 export function AppHeader() {
   const pathname = usePathname();
+  const { session } = useSession();
   
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/config', label: 'Configuration' },
     { href: '/accounts', label: 'Accounts' },
   ];
+
+  // If not logged in and no DB, don't show the header
+  if (!session?.isLoggedIn && !process.env.NEXT_PUBLIC_IS_DEMO) {
+      const isDbConfigured = !!process.env.MONGODB_URI;
+      if (isDbConfigured) return null;
+  }
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

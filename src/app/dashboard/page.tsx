@@ -2,16 +2,22 @@ import { getConfigurationNames } from '@/actions/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListChecks } from 'lucide-react';
 import Link from 'next/link';
+import { isMongoConfigured } from '@/lib/mongodb';
 
 export default async function DashboardPage() {
     const dashboardNames = await getConfigurationNames();
 
+  if (!isMongoConfigured() && dashboardNames.length === 0) {
+    // If mongo is not configured, we create a default dashboard link for demo purposes.
+    dashboardNames.push('Main Dashboard');
+  }
+
   if (!dashboardNames || dashboardNames.length === 0) {
     return (
-      <div className="text-center">
+      <div className="container mx-auto py-10 text-center">
         <h2 className="text-2xl font-semibold">No Dashboards Available</h2>
         <p className="mt-2 text-muted-foreground">
-          Please create a dashboard configuration first.
+          Please go to the Configuration page to create a dashboard.
         </p>
       </div>
     );

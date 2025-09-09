@@ -13,12 +13,18 @@ async function getConfigCollection(): Promise<Collection<Config> | null> {
 export async function getConfiguration(configName: string): Promise<Config> {
   const collection = await getConfigCollection();
   if (!collection) {
-    // If mongo is not configured or connection failed, we can't find the config.
+    // If mongo is not configured, return a default empty config for demo purposes.
+    if (configName === 'Main Dashboard') {
+        return { name: 'Main Dashboard', parameters: [] };
+    }
     notFound();
   }
   try {
     const config = await collection.findOne({ name: configName });
     if (!config) {
+       if (configName === 'Main Dashboard') {
+        return { name: 'Main Dashboard', parameters: [] };
+      }
       notFound();
     }
     // Convert ObjectId to string for client-side usage if needed.
@@ -31,7 +37,6 @@ export async function getConfiguration(configName: string): Promise<Config> {
 
 export async function getConfigurationNames(): Promise<string[]> {
   if (!isMongoConfigured()) {
-    console.warn("MongoDB is not configured. Skipping fetching configuration names.");
     return [];
   }
   const collection = await getConfigCollection();

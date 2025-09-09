@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/common/header';
 import { Toaster } from "@/components/ui/toaster";
 import { getSession } from '@/actions/session';
+import { isMongoConfigured } from '@/lib/mongodb';
 
 export const metadata: Metadata = {
   title: 'Smart Monitoring',
@@ -16,6 +17,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getSession();
+  const isDbConnected = isMongoConfigured();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -26,7 +28,7 @@ export default async function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
             <div className="relative flex min-h-screen flex-col">
-                {session.isLoggedIn && <AppHeader />}
+                {(session.isLoggedIn || !isDbConnected) && <AppHeader />}
                 <main className="flex-1">{children}</main>
             </div>
             <Toaster />

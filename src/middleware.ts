@@ -10,7 +10,10 @@ export async function middleware(req: NextRequest) {
 
   const session = await getSession();
 
-  if (isProtectedRoute && !session.isLoggedIn) {
+  // If Mongo is not configured, we allow access to dashboard for demo purposes
+  const isDbConfigured = !!process.env.MONGODB_URI;
+
+  if (isDbConfigured && isProtectedRoute && !session.isLoggedIn) {
     // Redirect to login page if trying to access a protected route without being logged in
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
@@ -25,7 +28,7 @@ export async function middleware(req: NextRequest) {
     // ensure it's the one they are assigned to.
     if (path.startsWith('/dashboard/')) {
         const requestedDashboard = decodeURIComponent(path.split('/')[2]);
-        if (session.dashboardName !== requestedDashboard) {
+        if (session.dashboardName && session.dashboardName !== requestedDashboard) {
             // If it's not their assigned dashboard, redirect them to the correct one.
             const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
             return NextResponse.redirect(correctDashboardUrl);
