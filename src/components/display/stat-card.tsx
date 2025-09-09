@@ -2,40 +2,19 @@
 
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
-import { useEffect, useState } from 'react';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type StatCardProps = {
   parameter: Parameter;
 };
 
 export function StatCard({ parameter }: StatCardProps) {
-  const [value, setValue] = useState<number | null>(null);
-  const [previousValue, setPreviousValue] = useState<number | null>(null);
+  const { data, isLoading } = useParameterData(parameter);
 
-  useEffect(() => {
-    // Set initial value only on the client
-    const initialValue = 50 + (Math.random() - 0.5) * 40;
-    setValue(initialValue);
-    setPreviousValue(initialValue);
-
-    const interval = setInterval(() => {
-      setValue((currentValue) => {
-        const prev = currentValue ?? initialValue;
-        setPreviousValue(prev);
-        const change = (Math.random() - 0.5) * 10;
-        let newValue = prev + change;
-        if (newValue < 0) newValue = 0;
-        if (newValue > 100) newValue = 100;
-        return newValue;
-      });
-    }, 2000 + Math.random() * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  if (value === null || previousValue === null) {
+  if (isLoading || !data) {
     return (
       <WidgetCardWrapper
         title={parameter.name}
@@ -43,13 +22,15 @@ export function StatCard({ parameter }: StatCardProps) {
         description={parameter.description}
         contentClassName="flex flex-col items-center justify-center"
       >
-        <div className="h-full flex flex-col items-center justify-center">
-            <p className="font-bold text-4xl">--.-</p>
+        <div className="h-full flex flex-col items-center justify-center gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-5 w-16" />
         </div>
       </WidgetCardWrapper>
     );
   }
 
+  const { value, previousValue } = data;
   const trend = value > previousValue ? 'up' : value < previousValue ? 'down' : 'neutral';
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
   const difference = Math.abs(value - previousValue);

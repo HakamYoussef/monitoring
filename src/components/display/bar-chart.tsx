@@ -3,34 +3,16 @@
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useEffect, useState } from 'react';
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis } from 'recharts';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type BarChartComponentProps = {
   parameter: Parameter;
 };
 
-const MAX_DATA_POINTS = 10;
-
-
 export function BarChartComponent({ parameter }: BarChartComponentProps) {
-  const [data, setData] = useState<any[]>([]);
-  
-  const generateRandomData = () =>
-  Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-    name: `Point ${i + 1}`,
-    value: Math.random() * 80 + 10,
-  }));
-
-
-  useEffect(() => {
-    setData(generateRandomData());
-    const interval = setInterval(() => {
-      setData(generateRandomData());
-    }, 3000 + Math.random() * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { data, isLoading } = useParameterData(parameter, []);
 
   const chartConfig = {
     value: {
@@ -46,6 +28,11 @@ export function BarChartComponent({ parameter }: BarChartComponentProps) {
       description={`Bar chart for ${parameter.name.toLowerCase()}.`}
       contentClassName="pl-0 pr-4 pb-4"
     >
+        {isLoading && data.length === 0 ? (
+        <div className="p-6 h-full w-full flex items-center justify-center">
+            <Skeleton className="h-full w-full" />
+        </div>
+        ) : (
       <ChartContainer config={chartConfig} className="h-full w-full">
         <RechartsBarChart
           accessibilityLayer
@@ -67,6 +54,7 @@ export function BarChartComponent({ parameter }: BarChartComponentProps) {
           <Bar dataKey="value" fill="var(--color-value)" radius={4} />
         </RechartsBarChart>
       </ChartContainer>
+        )}
     </WidgetCardWrapper>
   );
 }

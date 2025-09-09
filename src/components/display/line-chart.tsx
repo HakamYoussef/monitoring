@@ -3,52 +3,16 @@
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { useEffect, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type LineChartComponentProps = {
   parameter: Parameter;
 };
 
-const MAX_DATA_POINTS = 20;
-
-
 export function LineChartComponent({ parameter }: LineChartComponentProps) {
-  const [data, setData] = useState<any[]>([]);
-
-  const generateInitialData = () => {
-    const randomData = Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-      time: i,
-      value: Math.random() * 20 + 40,
-    }));
-    return randomData;
-  };
-  
-  useEffect(() => {
-    setData(generateInitialData());
-
-    const interval = setInterval(() => {
-      setData((prevData) => {
-        if (prevData.length === 0) return generateInitialData();
-        
-        const lastValue = prevData[prevData.length - 1]?.value || 50;
-        const change = (Math.random() - 0.5) * 5;
-        let newValue = lastValue + change;
-        if (newValue < 0) newValue = 0;
-        if (newValue > 100) newValue = 100;
-
-        const newDataPoint = { time: (prevData[prevData.length - 1]?.time || 0) + 1, value: newValue };
-        const newDataSet = [...prevData, newDataPoint];
-
-        if (newDataSet.length > MAX_DATA_POINTS) {
-          return newDataSet.slice(newDataSet.length - MAX_DATA_POINTS);
-        }
-        return newDataSet;
-      });
-    }, 2000 + Math.random() * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { data, isLoading } = useParameterData(parameter, []);
 
   const chartConfig = {
     value: {
@@ -64,6 +28,11 @@ export function LineChartComponent({ parameter }: LineChartComponentProps) {
       description={`Live trend for ${parameter.name.toLowerCase()}.`}
       contentClassName="pl-0 pr-4 pb-4"
     >
+      {isLoading && data.length === 0 ? (
+        <div className="p-6 h-full w-full flex items-center justify-center">
+            <Skeleton className="h-full w-full" />
+        </div>
+      ) : (
       <ChartContainer config={chartConfig} className="h-full w-full">
         <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
           <CartesianGrid vertical={false} />
@@ -86,6 +55,7 @@ export function LineChartComponent({ parameter }: LineChartComponentProps) {
           <Area dataKey="value" type="natural" fill="url(#fillValue)" stroke="var(--color-value)" stackId="a" />
         </AreaChart>
       </ChartContainer>
+      )}
     </WidgetCardWrapper>
   );
 }

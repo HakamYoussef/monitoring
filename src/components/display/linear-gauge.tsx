@@ -2,32 +2,16 @@
 
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type LinearGaugeProps = {
   parameter: Parameter;
 };
 
 export function LinearGauge({ parameter }: LinearGaugeProps) {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    const initialValue = 50 + (Math.random() - 0.5) * 40;
-    setValue(initialValue);
-
-    const interval = setInterval(() => {
-      setValue((prevValue) => {
-        const change = (Math.random() - 0.5) * 10;
-        let newValue = prevValue + change;
-        if (newValue < 0) newValue = 0;
-        if (newValue > 100) newValue = 100;
-        return newValue;
-      });
-    }, 2000 + Math.random() * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { data: value, isLoading } = useParameterData(parameter, 50);
 
   const percentage = (value / 100) * 100;
 
@@ -47,14 +31,18 @@ export function LinearGauge({ parameter }: LinearGaugeProps) {
       description={parameter.description}
       contentClassName="flex flex-col justify-center space-y-4"
     >
-      <div className={cn('w-full rounded-full bg-muted', barHeight)}>
-        <div
-          className={cn('h-full rounded-full transition-all duration-500', getColor(value))}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      {isLoading ? (
+        <Skeleton className={cn('w-full rounded-full', barHeight)} />
+      ) : (
+        <div className={cn('w-full rounded-full bg-muted', barHeight)}>
+          <div
+            className={cn('h-full rounded-full transition-all duration-500', getColor(value))}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+      )}
       <p className="text-right text-muted-foreground">
-        {value.toFixed(1)} {parameter.unit}
+        {isLoading ? '... ' : `${value.toFixed(1)} `}{parameter.unit}
       </p>
     </WidgetCardWrapper>
   );

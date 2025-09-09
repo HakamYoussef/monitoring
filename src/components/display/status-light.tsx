@@ -2,26 +2,16 @@
 
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type StatusLightProps = {
   parameter: Parameter;
 };
 
 export function StatusLight({ parameter }: StatusLightProps) {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    const initialValue = Math.random() * 100;
-    setValue(initialValue);
-
-    const interval = setInterval(() => {
-      setValue(Math.random() * 100);
-    }, 3000 + Math.random() * 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { data: value, isLoading } = useParameterData(parameter, 50);
 
   const getStatus = (val: number) => {
     if (val < 33) return { label: 'OK', color: 'bg-green-500', shadow: 'shadow-[0_0_12px_4px] shadow-green-500/70' };
@@ -40,12 +30,17 @@ export function StatusLight({ parameter }: StatusLightProps) {
       description={parameter.description}
       contentClassName="flex flex-col items-center justify-center space-y-4"
     >
-      <div className={cn('relative', lightSize)}>
-        <div className={cn('h-full w-full rounded-full', status.color, status.shadow)} />
-      </div>
-      <p className={cn('font-semibold', labelSize)}>{status.label}</p>
+      {isLoading ? (
+        <Skeleton className={cn('rounded-full', lightSize)} />
+      ) : (
+         <div className={cn('relative', lightSize)}>
+            <div className={cn('h-full w-full rounded-full', status.color, status.shadow)} />
+        </div>
+      )}
+     
+      <p className={cn('font-semibold', labelSize)}>{isLoading ? <Skeleton className="h-6 w-20" /> : status.label}</p>
       <p className="text-sm text-muted-foreground">
-        {value.toFixed(1)} {parameter.unit}
+        {isLoading ? '...' : value.toFixed(1)} {parameter.unit}
       </p>
     </WidgetCardWrapper>
   );

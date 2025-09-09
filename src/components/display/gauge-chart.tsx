@@ -3,32 +3,30 @@
 import { Parameter } from '@/lib/types';
 import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer } from '@/components/ui/chart';
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import { Skeleton } from '../ui/skeleton';
 
 type RadialGaugeProps = {
   parameter: Parameter;
 };
 
 export function RadialGauge({ parameter }: RadialGaugeProps) {
-  const [value, setValue] = useState(0);
+    const { data: value, isLoading } = useParameterData(parameter, 50);
 
-  useEffect(() => {
-    const initialValue = 50 + (Math.random() - 0.5) * 40;
-    setValue(initialValue);
+    if (isLoading) {
+    return (
+        <WidgetCardWrapper
+        title={parameter.name}
+        icon={parameter.icon}
+        description={parameter.description}
+        contentClassName="flex items-center justify-center p-4"
+        >
+        <Skeleton className="aspect-square h-full w-full rounded-full" />
+        </WidgetCardWrapper>
+    );
+    }
 
-    const interval = setInterval(() => {
-      setValue((prevValue) => {
-        const change = (Math.random() - 0.5) * 10;
-        let newValue = prevValue + change;
-        if (newValue < 0) newValue = 0;
-        if (newValue > 100) newValue = 100;
-        return newValue;
-      });
-    }, 2000 + Math.random() * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const percentage = value / 100;
   const size = 200;
@@ -56,7 +54,7 @@ export function RadialGauge({ parameter }: RadialGaugeProps) {
         config={{
           value: { label: parameter.name },
         }}
-        className="mx-auto aspect-square h-full max-w-full"
+        className="mx-auto aspect-square h-full w-full max-w-[200px]"
       >
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           <circle
