@@ -57,10 +57,17 @@ export function WidgetGrid({ parameters }: WidgetGridProps) {
     <>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {parameters.map((param) => (
-          <div key={param.id}>{renderWidget(param)}</div>
+          <div key={param.id} className="h-80">
+            {renderWidget(param)}
+          </div>
         ))}
       </div>
-      <WidgetModal isOpen={!!selectedWidget} onOpenChange={() => setSelectedWidget(null)}>
+      <WidgetModal
+        isOpen={!!selectedWidget}
+        onOpenChange={() => setSelectedWidget(null)}
+        title={selectedWidget?.name || ''}
+        description={selectedWidget?.description}
+      >
         {selectedWidget && (
           <div className="h-[60vh] w-full">
             {renderWidget(selectedWidget, true)}

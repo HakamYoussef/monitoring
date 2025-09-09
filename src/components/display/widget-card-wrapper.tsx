@@ -30,7 +30,7 @@ export function WidgetCardWrapper({
     <Card className={cn('group relative flex h-full flex-col', className)}>
       <CardHeader className={cn(headerClassName)}>
         <CardTitle className="text-lg">{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
+        {description && <CardDescription className="truncate">{description}</CardDescription>}
       </CardHeader>
       <CardContent className={cn('flex-1', contentClassName)}>{children}</CardContent>
       {!isModal && onEnlarge && (
