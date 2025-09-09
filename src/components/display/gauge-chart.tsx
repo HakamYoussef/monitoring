@@ -49,13 +49,13 @@ export function RadialGauge({ parameter }: RadialGaugeProps) {
       title={parameter.name}
       description={parameter.description}
       headerClassName="items-center pb-2"
-      contentClassName="flex items-center justify-center"
+      contentClassName="flex items-center justify-center p-4"
     >
       <ChartContainer
         config={{
           value: { label: parameter.name },
         }}
-        className="mx-auto aspect-square h-full w-full"
+        className="mx-auto aspect-square max-h-[250px] w-full"
       >
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           <circle
