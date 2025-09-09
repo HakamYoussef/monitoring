@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { PanelsTopLeft, LayoutDashboard, Settings } from 'lucide-react';
+import { PanelsTopLeft } from 'lucide-react';
+import { LocationTime } from './location-time';
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -16,11 +17,13 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2">
-          <PanelsTopLeft className="h-6 w-6 text-primary" />
-          <span className="font-bold">ConfigDisplay</span>
-        </Link>
-        <nav className="flex items-center space-x-6 text-sm font-medium">
+        <div className="mr-6 flex items-center">
+          <Link href="/" className="flex items-center space-x-2">
+            <PanelsTopLeft className="h-6 w-6 text-primary" />
+            <span className="font-bold">ConfigDisplay</span>
+          </Link>
+        </div>
+        <nav className="flex flex-1 items-center space-x-6 text-sm font-medium">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -34,6 +37,9 @@ export function AppHeader() {
             </Link>
           ))}
         </nav>
+        <div className="flex items-center">
+            <LocationTime />
+        </div>
       </div>
     </header>
   );
