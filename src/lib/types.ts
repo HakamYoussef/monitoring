@@ -17,11 +17,3 @@ export const ConfigSchema = z.object({
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
-
-// This is the shape of the user data we'll store in the session
-export const UserDataSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-});
-
-export type UserData = z.infer<typeof UserDataSchema>;

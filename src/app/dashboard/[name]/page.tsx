@@ -1,5 +1,4 @@
 import { getConfiguration } from '@/actions/config';
-import { ProtectedRoute } from '@/components/common/protected-route';
 import { WidgetGrid } from '@/components/display/widget-grid';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -10,7 +9,7 @@ type DisplayDashboardPageProps = {
   };
 };
 
-async function DisplayDashboard({ params }: DisplayDashboardPageProps) {
+export default async function DisplayDashboardPage({ params }: DisplayDashboardPageProps) {
   const configName = decodeURIComponent(params.name);
   const config = await getConfiguration(configName);
 
@@ -41,13 +40,4 @@ async function DisplayDashboard({ params }: DisplayDashboardPageProps) {
       <WidgetGrid parameters={config.parameters} />
     </div>
   );
-}
-
-
-export default function DisplayDashboardPage({ params }: DisplayDashboardPageProps) {
-    return (
-        <ProtectedRoute>
-            <DisplayDashboard params={params} />
-        </ProtectedRoute>
-    )
 }

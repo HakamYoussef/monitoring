@@ -1,8 +1,7 @@
 import { ConfigForm } from '@/components/config/config-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProtectedRoute } from '@/components/common/protected-route';
 
-function NewConfiguration() {
+export default function NewConfigurationPage() {
   return (
     <div className="container mx-auto py-10">
       <Card>
@@ -18,12 +17,4 @@ function NewConfiguration() {
       </Card>
     </div>
   );
-}
-
-export default function NewConfigurationPage() {
-    return (
-        <ProtectedRoute>
-            <NewConfiguration />
-        </ProtectedRoute>
-    )
 }

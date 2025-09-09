@@ -1,8 +1,6 @@
 import { getConfiguration } from '@/actions/config';
 import { ConfigForm } from '@/components/config/config-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProtectedRoute } from '@/components/common/protected-route';
-
 
 type EditConfigurationPageProps = {
   params: {
@@ -10,7 +8,7 @@ type EditConfigurationPageProps = {
   };
 };
 
-async function EditConfiguration({ params }: EditConfigurationPageProps) {
+export default async function EditConfigurationPage({ params }: EditConfigurationPageProps) {
   const configName = decodeURIComponent(params.name);
   const config = await getConfiguration(configName);
 
@@ -29,12 +27,4 @@ async function EditConfiguration({ params }: EditConfigurationPageProps) {
       </Card>
     </div>
   );
-}
-
-export default function EditConfigurationPage({ params }: EditConfigurationPageProps) {
-    return (
-        <ProtectedRoute>
-            <EditConfiguration params={params} />
-        </ProtectedRoute>
-    )
 }

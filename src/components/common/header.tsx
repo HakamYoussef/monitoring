@@ -6,17 +6,14 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { PanelsTopLeft } from 'lucide-react';
 import { LocationTime } from './location-time';
-import { useAuth } from '@/context/auth-context';
-import { Button } from '../ui/button';
 
 export function AppHeader() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-
-  const navLinks = user ? [
+  
+  const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/config', label: 'Configuration' },
-  ] : [];
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -43,20 +40,6 @@ export function AppHeader() {
         </nav>
         <div className="flex items-center gap-4">
             <LocationTime />
-            {user ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground hidden sm:inline">
-                    {user.email}
-                  </span>
-                  <Button variant="outline" onClick={logout}>Logout</Button>
-                </div>
-            ) : (
-               <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-              </div>
-            )}
         </div>
       </div>
     </header>
