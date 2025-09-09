@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { PanelsTopLeft } from 'lucide-react';
 import { LocationTime } from './location-time';
+import { UserNav } from './user-nav';
+
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -41,6 +43,7 @@ export function AppHeader() {
         </nav>
         <div className="flex items-center gap-4">
             <LocationTime />
+            <UserNav />
         </div>
       </div>
     </header>
