@@ -45,14 +45,9 @@ export function AppHeader() {
             {user ? (
                 <Button variant="outline" onClick={logout}>Logout</Button>
             ) : (
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" asChild>
-                        <Link href="/login">Login</Link>
-                    </Button>
-                    <Button asChild>
-                        <Link href="/signup">Sign Up</Link>
-                    </Button>
-                </div>
+                <Button asChild>
+                    <Link href="/login">Login</Link>
+                </Button>
             )}
         </div>
       </div>

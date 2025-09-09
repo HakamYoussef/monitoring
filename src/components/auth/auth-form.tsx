@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -20,50 +19,31 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
-const signupSchema = z.object({
-  email: z.string().email('Invalid email address.'),
-  password: z.string().min(8, 'Password must be at least 8 characters.'),
-});
-
-type AuthFormProps = {
-  type: 'login' | 'signup';
-};
-
-export function AuthForm({ type }: AuthFormProps) {
+export function AuthForm() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const isLogin = type === 'login';
-  const schema = isLogin ? loginSchema : signupSchema;
-
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
     },
   });
 
-  const onSubmit = (values: z.infer<typeof schema>) => {
+  const onSubmit = (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
 
     // Simulate API call
     setTimeout(() => {
-      if (isLogin) {
-        if (values.email === 'demo@example.com' && values.password === 'password') {
-          login({ email: values.email });
-          toast({ title: 'Login Successful', description: "Welcome back!" });
-        } else {
-          toast({ variant: 'destructive', title: 'Invalid Credentials', description: 'Please check your email and password.' });
-          setIsLoading(false);
-        }
-      } else {
-        // For signup, we'll just log the user in and redirect.
-        // In a real app, you'd create a new user account here.
+      if (values.email === 'demo@example.com' && values.password === 'password') {
         login({ email: values.email });
-        toast({ title: 'Signup Successful', description: 'Your account has been created.' });
+        toast({ title: 'Login Successful', description: "Welcome back!" });
+      } else {
+        toast({ variant: 'destructive', title: 'Invalid Credentials', description: 'Please check your email and password.' });
+        setIsLoading(false);
       }
     }, 1000);
   };
@@ -72,9 +52,9 @@ export function AuthForm({ type }: AuthFormProps) {
     <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{isLogin ? 'Login' : 'Sign Up'}</CardTitle>
+          <CardTitle>Login</CardTitle>
           <CardDescription>
-            {isLogin ? 'Enter your credentials to access your dashboard.' : 'Create an account to get started.'}
+            Enter your credentials to access your dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -106,27 +86,10 @@ export function AuthForm({ type }: AuthFormProps) {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLogin ? 'Login' : 'Sign Up'}
+              Login
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="text-sm">
-          {isLogin ? (
-            <p>
-              Don&apos;t have an account?{' '}
-              <Link href="/signup" className="underline">
-                Sign up
-              </Link>
-            </p>
-          ) : (
-            <p>
-              Already have an account?{' '}
-              <Link href="/login" className="underline">
-                Login
-              </Link>
-            </p>
-          )}
-        </CardFooter>
       </Card>
     </div>
   );
