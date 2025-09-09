@@ -1,7 +1,7 @@
+
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,21 +80,15 @@ export function AuthForm() {
                 disabled={isLoading}
               />
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p className="text-sm text-destructive">{form.form_state.errors.password.message}</p>
               )}
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col items-start gap-4">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
-             <p className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
           </CardFooter>
         </form>
       </Card>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -18,10 +19,13 @@ async function readUsers(): Promise<User[]> {
     // Ensure the data directory exists
     await fs.mkdir(path.dirname(usersFilePath), { recursive: true });
     const data = await fs.readFile(usersFilePath, 'utf-8');
-    return JSON.parse(data);
+    const users = JSON.parse(data);
+    // Zod validation for the array of users
+    z.array(UserSchema).parse(users);
+    return users;
   } catch (error) {
-    // If the file doesn't exist, create it with a default user
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    // If the file doesn't exist or is invalid, create it with a default user
+    if (error instanceof SyntaxError || (error as NodeJS.ErrnoException).code === 'ENOENT') {
         const defaultUser: User = {
           id: '1',
           email: 'demo@example.com',
@@ -40,6 +44,14 @@ async function writeUsers(users: User[]): Promise<void> {
   await fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
 }
 
+/**
+ * Returns all users without their passwords.
+ */
+export async function getUsers(): Promise<UserData[]> {
+    const users = await readUsers();
+    return users.map(({ password, ...userData }) => userData);
+}
+
 
 export async function login(email: string, password: string): Promise<{ success: boolean; user?: UserData; error?: string }> {
   const users = await readUsers();
@@ -49,6 +61,8 @@ export async function login(email: string, password: string): Promise<{ success:
     return { success: false, error: 'User not found.' };
   }
 
+  // IMPORTANT: In a real application, NEVER store plain text passwords.
+  // Always hash passwords and compare the hash.
   if (user.password !== password) {
     return { success: false, error: 'Invalid password.' };
   }
@@ -57,7 +71,7 @@ export async function login(email: string, password: string): Promise<{ success:
   return { success: true, user: userData };
 }
 
-export async function signup(data: SignupData): Promise<{ success: boolean; user?: UserData; error?: string }> {
+export async function createUser(data: SignupData): Promise<{ success: boolean; user?: UserData; error?: string }> {
     const validation = SignupSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: validation.error.issues.map(i => i.message).join(', ') };
@@ -81,6 +95,19 @@ export async function signup(data: SignupData): Promise<{ success: boolean; user
 
     return { success: true, user: userData };
 }
+
+export async function deleteUser(userId: string): Promise<{ success: boolean, error?: string}> {
+    const users = await readUsers();
+    const newUsers = users.filter(u => u.id !== userId);
+
+    if (users.length === newUsers.length) {
+        return { success: false, error: `User with ID ${userId} not found.`};
+    }
+
+    await writeUsers(newUsers);
+    return { success: true };
+}
+
 
 export async function logout(): Promise<{ success: boolean }> {
   // In a real app, you might invalidate a session token on the server.

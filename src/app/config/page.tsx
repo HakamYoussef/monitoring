@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
@@ -17,77 +18,102 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ListChecks, Trash2, Loader2 } from 'lucide-react';
+import { ListChecks, Trash2, Loader2, Users, UserPlus } from 'lucide-react';
 import { ProtectedRoute } from '@/components/common/protected-route';
+import { UserData } from '@/lib/types';
+import { getUsers, deleteUser } from '@/lib/users';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
 
 function ConfigurationHub() {
   const [configNames, setConfigNames] = useState<string[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, startDeleteTransition] = useTransition();
+
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [configToDelete, setConfigToDelete] = useState<string | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ type: 'config' | 'user'; id: string; name: string; } | null>(null);
+
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchConfigNames() {
+  const loadData = async () => {
       setIsLoading(true);
-      const names = await getConfigurationNames();
+      const [names, userList] = await Promise.all([
+          getConfigurationNames(),
+          getUsers()
+      ]);
       setConfigNames(names);
+      setUsers(userList);
       setIsLoading(false);
-    }
-    fetchConfigNames();
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
-  const handleDeleteClick = (name: string) => {
-    setConfigToDelete(name);
+  const handleDeleteClick = (type: 'config' | 'user', id: string, name: string) => {
+    setItemToDelete({ type, id, name });
     setDialogOpen(true);
   };
 
   const handleConfirmDelete = () => {
-    if (!configToDelete) return;
+    if (!itemToDelete) return;
 
     startDeleteTransition(async () => {
-      const result = await deleteConfiguration(configToDelete);
+      let result: { success: boolean; error?: string };
+      if (itemToDelete.type === 'config') {
+          result = await deleteConfiguration(itemToDelete.id);
+      } else {
+          result = await deleteUser(itemToDelete.id);
+      }
+      
       if (result.success) {
         toast({
-          title: 'Configuration Deleted',
-          description: `The configuration "${configToDelete}" has been deleted.`,
+          title: `${itemToDelete.type === 'config' ? 'Configuration' : 'User'} Deleted`,
+          description: `The ${itemToDelete.type} "${itemToDelete.name}" has been deleted.`,
         });
-        // Refresh the list
-        const names = await getConfigurationNames();
-        setConfigNames(names);
+        await loadData(); // Refresh both lists
       } else {
         toast({
           variant: 'destructive',
-          title: 'Error Deleting Configuration',
+          title: `Error Deleting ${itemToDelete.type}`,
           description: result.error || 'An unknown error occurred.',
         });
       }
       setDialogOpen(false);
-      setConfigToDelete(null);
+      setItemToDelete(null);
     });
   };
 
   return (
     <>
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto py-10 space-y-10">
+        {/* Display Configurations */}
         <Card>
-          <CardHeader>
-            <CardTitle>Display Configuration Hub</CardTitle>
-            <CardDescription>
-              Manage your display configurations. You can create a new one or edit an existing one.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex justify-start">
-              <Button asChild>
-                <Link href="/config/new">Create New Configuration</Link>
+          <CardHeader className="flex-row items-center justify-between">
+              <div>
+                <CardTitle>Display Configurations</CardTitle>
+                <CardDescription>
+                  Manage your display configurations for dashboards.
+                </CardDescription>
+              </div>
+               <Button asChild>
+                <Link href="/config/new">
+                  <ListChecks />
+                  Create New Configuration
+                </Link>
               </Button>
-            </div>
-
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Existing Configurations</h3>
               {isLoading ? (
                 <div className="flex items-center space-x-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -105,8 +131,8 @@ function ConfigurationHub() {
                         <Button asChild variant="outline">
                           <Link href={`/config/edit/${encodeURIComponent(name)}`}>Edit</Link>
                         </Button>
-                        <Button variant="destructive" onClick={() => handleDeleteClick(name)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="destructive" onClick={() => handleDeleteClick('config', name, name)}>
+                          <Trash2 />
                         </Button>
                       </div>
                     </li>
@@ -118,6 +144,57 @@ function ConfigurationHub() {
             </div>
           </CardContent>
         </Card>
+
+        {/* User Accounts */}
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+             <div>
+                <CardTitle>User Accounts</CardTitle>
+                <CardDescription>
+                  Manage users and their dashboard access.
+                </CardDescription>
+              </div>
+              <Button asChild>
+                <Link href="/config/users/new">
+                  <UserPlus />
+                  Create New User
+                </Link>
+              </Button>
+          </CardHeader>
+          <CardContent>
+             {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <p>Loading users...</p>
+                </div>
+              ) : users.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Accessible Dashboards</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users.map((user) => (
+                            <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell>{user.accessibleDashboards.join(', ')}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="destructive" onClick={() => handleDeleteClick('user', user.id, user.email)}>
+                                        <Trash2 />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+              ) : (
+                 <p className="text-muted-foreground">No users found. Create one to get started.</p>
+              )}
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -126,8 +203,8 @@ function ConfigurationHub() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              <span className="font-semibold"> &quot;{configToDelete}&quot; </span>
-              configuration.
+              <span className="font-semibold"> &quot;{itemToDelete?.name}&quot; </span>
+              {itemToDelete?.type}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

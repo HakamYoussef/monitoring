@@ -1,17 +1,16 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { Skeleton } from '@/components/ui/skeleton';
-import { login as apiLogin, signup as apiSignup, logout as apiLogout } from '@/lib/users';
-import type { UserData, SignupData } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { login as apiLogin, logout as apiLogout } from '@/lib/users';
+import type { UserData } from '@/lib/types';
 
 type AuthContextType = {
   user: UserData | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem('user', JSON.stringify(result.user));
       setUser(result.user);
       router.push('/dashboard');
+      router.refresh();
     }
     return { success: result.success, error: result.error };
   };
@@ -50,20 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('user');
     setUser(null);
     router.push('/login');
+    router.refresh();
   };
 
-  const signup = async (data: SignupData) => {
-    const result = await apiSignup(data);
-     if (result.success && result.user) {
-      sessionStorage.setItem('user', JSON.stringify(result.user));
-      setUser(result.user);
-      router.push('/dashboard');
-    }
-    return result;
-  }
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

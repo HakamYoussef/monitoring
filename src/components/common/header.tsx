@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -53,9 +54,6 @@ export function AppHeader() {
                <div className="flex items-center gap-2">
                 <Button variant="ghost" asChild>
                   <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
                 </Button>
               </div>
             )}
