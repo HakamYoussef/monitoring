@@ -11,24 +11,18 @@ type StatCardProps = {
 };
 
 export function StatCard({ parameter }: StatCardProps) {
-  const [value, setValue] = useState(0);
-  const [previousValue, setPreviousValue] = useState(0);
+  const [value, setValue] = useState(50 + (Math.random() - 0.5) * 40);
+  const [previousValue, setPreviousValue] = useState(value);
 
   useEffect(() => {
-    const initialValue = 50 + (Math.random() - 0.5) * 40;
-    setValue(initialValue);
-    setPreviousValue(initialValue);
-
     const interval = setInterval(() => {
-      setPreviousValue(prev => {
-        setValue(currentValue => {
-          const change = (Math.random() - 0.5) * 10;
-          let newValue = currentValue + change;
-          if (newValue < 0) newValue = 0;
-          if (newValue > 100) newValue = 100;
-          return newValue;
-        });
-        return prev;
+      setValue((currentValue) => {
+        setPreviousValue(currentValue);
+        const change = (Math.random() - 0.5) * 10;
+        let newValue = currentValue + change;
+        if (newValue < 0) newValue = 0;
+        if (newValue > 100) newValue = 100;
+        return newValue;
       });
     }, 2000 + Math.random() * 1000);
 
@@ -37,6 +31,7 @@ export function StatCard({ parameter }: StatCardProps) {
 
   const trend = value > previousValue ? 'up' : value < previousValue ? 'down' : 'neutral';
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
+  const difference = Math.abs(value - previousValue);
 
   return (
     <WidgetCardWrapper
@@ -63,7 +58,7 @@ export function StatCard({ parameter }: StatCardProps) {
         )}
       >
         <TrendIcon className="mr-1 h-5 w-5" />
-        <span>{trend !== 'neutral' ? Math.abs(value - previousValue).toFixed(1) : ''}</span>
+        <span>{trend !== 'neutral' ? difference.toFixed(1) : ''}</span>
       </div>
     </WidgetCardWrapper>
   );
