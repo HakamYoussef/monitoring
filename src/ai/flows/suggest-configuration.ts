@@ -1,71 +1,65 @@
-'use server';
-
-/**
- * @fileOverview AI-powered configuration suggestion flow.
- *
- * This file defines a Genkit flow that suggests optimal display configurations based on user-selected parameters.
- * - suggestConfiguration -  A function that suggests an initial display configuration.
- * - SuggestConfigurationInput - The input type for the suggestConfiguration function.
- * - SuggestConfigurationOutput - The return type for the suggestConfiguration function.
- */
-
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const SuggestConfigurationInputSchema = z.object({
-  parameters: z
-    .array(
-      z.object({
-        name: z.string().describe('The name of the parameter (e.g., temperature, humidity).'),
-        unit: z.string().optional().describe('The unit of measurement for the parameter (e.g., °C, %).'),
-        description: z.string().optional().describe('A detailed description of the parameter.'),
-      })
-    )
-    .describe('The list of parameters selected by the user.'),
-});
-export type SuggestConfigurationInput = z.infer<typeof SuggestConfigurationInputSchema>;
-
-const SuggestConfigurationOutputSchema = z.object({
-  configuration: z
-    .object({
-      displayType: z.string().describe('The suggested display type (e.g., gauge chart, line graph).'),
-      options: z.record(z.any()).optional().describe('Additional display options for the suggested display type.'),
-    })
-    .array()
-    .describe('The suggested display configuration for each parameter.'),
-});
-export type SuggestConfigurationOutput = z.infer<typeof SuggestConfigurationOutputSchema>;
-
-export async function suggestConfiguration(input: SuggestConfigurationInput): Promise<SuggestConfigurationOutput> {
-  return suggestConfigurationFlow(input);
-}
-
-const suggestConfigurationPrompt = ai.definePrompt({
-  name: 'suggestConfigurationPrompt',
-  input: {schema: SuggestConfigurationInputSchema},
-  output: {schema: SuggestConfigurationOutputSchema},
-  prompt: `You are an AI assistant that suggests optimal display configurations for a web application based on the selected parameters.
-
-  Consider the characteristics of each parameter (name, unit, description) and general UI design best practices to offer your recommendations.
-
-  For each parameter, suggest a suitable display type (e.g., gauge chart, line graph) and any relevant display options.
-
-  Parameters:
-  {{#each parameters}}
-  - Name: {{name}}
-    Unit: {{unit}}
-    Description: {{description}}
-  {{/each}}`,
-});
-
-const suggestConfigurationFlow = ai.defineFlow(
-  {
-    name: 'suggestConfigurationFlow',
-    inputSchema: SuggestConfigurationInputSchema,
-    outputSchema: SuggestConfigurationOutputSchema,
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
-  async input => {
-    const {output} = await suggestConfigurationPrompt(input);
-    return output!;
+  "dependencies": {
+    "@genkit-ai/googleai": "^1.14.1",
+    "@genkit-ai/next": "^1.14.1",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "genkit": "^1.14.1",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "genkit-cli": "^1.14.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
-);
+}
