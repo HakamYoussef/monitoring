@@ -5,7 +5,8 @@ import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { User } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { setSession, clearSession } from './session';
+import { setSession } from './session';
+import { createConfiguration } from './config';
 
 const LoginSchema = z.object({
   username: z.string(),
@@ -19,6 +20,31 @@ async function getUserCollection(): Promise<Collection<User> | null> {
   return getCollection<User>('users');
 }
 
+async function ensureDefaultUser() {
+    const userCollection = await getUserCollection();
+    if (!userCollection) return;
+
+    const userCount = await userCollection.countDocuments();
+    if (userCount === 0) {
+        console.log("No users found. Creating default admin user.");
+        // Also create a default dashboard config if none exist
+        const configCollection = await getCollection('configurations');
+        const configCount = await configCollection?.countDocuments();
+        if (configCount === 0) {
+            await createConfiguration({ name: 'Main Dashboard', parameters: [] });
+        }
+
+        const defaultUser: User = {
+            username: 'admin',
+            password: 'password', // In a real app, hash this!
+            dashboardName: 'Main Dashboard',
+        };
+        await userCollection.insertOne(defaultUser);
+        console.log("Default admin user created.");
+    }
+}
+
+
 export async function login(credentials: z.infer<typeof LoginSchema>) {
   try {
     const validation = LoginSchema.safeParse(credentials);
@@ -27,6 +53,10 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     }
     
     const { username, password } = validation.data;
+
+    if (isMongoConfigured()) {
+        await ensureDefaultUser();
+    }
 
     const collection = await getUserCollection();
     if (!collection) {
