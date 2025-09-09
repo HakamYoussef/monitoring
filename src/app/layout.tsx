@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/common/header';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'ConfigDisplay',
+  title: 'Smart Monitoring',
   description: 'Configure and display your parameters dynamically.',
 };
 

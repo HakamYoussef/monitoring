@@ -10,7 +10,7 @@ export function AppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/', label: 'Display' },
+    { href: '/', label: 'Dashboard' },
     { href: '/config', label: 'Configuration' },
   ];
 
@@ -20,7 +20,7 @@ export function AppHeader() {
         <div className="mr-6 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <PanelsTopLeft className="h-6 w-6 text-primary" />
-            <span className="font-bold">ConfigDisplay</span>
+            <span className="font-bold">Smart Monitoring</span>
           </Link>
         </div>
         <nav className="flex flex-1 items-center space-x-6 text-sm font-medium">
