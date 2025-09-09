@@ -1,35 +1,23 @@
 'use server';
 
-import fs from 'fs/promises';
-import path from 'path';
+import { Collection, ObjectId } from 'mongodb';
+import { getCollection } from '@/lib/mongodb';
 import { Config, ConfigSchema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 
-const dataDirPath = path.join(process.cwd(), 'src', 'data');
-
-async function ensureDataDirExists() {
-  try {
-    await fs.access(dataDirPath);
-  } catch {
-    await fs.mkdir(dataDirPath, { recursive: true });
-  }
-}
-
-function getConfigFilePath(configName: string): string {
-  // Sanitize the filename to prevent directory traversal
-  const safeName = path.basename(configName).replace(/\.json$/, '');
-  return path.join(dataDirPath, `${safeName}.json`);
+async function getConfigCollection(): Promise<Collection<Config>> {
+  return getCollection<Config>('configurations');
 }
 
 export async function getConfiguration(configName: string): Promise<Config> {
-  await ensureDataDirExists();
-  const filePath = getConfigFilePath(configName);
-
+  const collection = await getConfigCollection();
   try {
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    const config = JSON.parse(fileContent);
-    ConfigSchema.parse(config);
-    return config;
+    const config = await collection.findOne({ name: configName });
+    if (!config) {
+      notFound();
+    }
+    // Convert ObjectId to string for client-side usage if needed, though our schema doesn't have it at the top level.
+    return JSON.parse(JSON.stringify(config));
   } catch (error) {
     console.error(`Failed to load configuration '${configName}':`, error);
     notFound();
@@ -37,21 +25,18 @@ export async function getConfiguration(configName: string): Promise<Config> {
 }
 
 export async function getConfigurationNames(): Promise<string[]> {
-  await ensureDataDirExists();
+  const collection = await getConfigCollection();
   try {
-    const files = await fs.readdir(dataDirPath);
-    return files
-      .filter((file) => file.endsWith('.json') && file !== 'users.json') // Exclude users.json
-      .map((file) => file.replace(/\.json$/, ''));
+    const configs = await collection.find({}, { projection: { name: 1 } }).toArray();
+    return configs.map((c) => c.name);
   } catch (error) {
     console.error('Failed to get configuration names:', error);
     return [];
   }
 }
 
-
 export async function saveConfiguration(config: Config): Promise<{ success: boolean; error?: string }> {
-  await ensureDataDirExists();
+  const collection = await getConfigCollection();
   try {
     const validation = ConfigSchema.safeParse(config);
     if (!validation.success) {
@@ -59,10 +44,17 @@ export async function saveConfiguration(config: Config): Promise<{ success: bool
       return { success: false, error: errorMessage };
     }
     
-    // In a multi-project setup, you might save to a different file based on config.name
-    const filePath = getConfigFilePath(validation.data.name);
-    const fileContent = JSON.stringify(validation.data, null, 2);
-    await fs.writeFile(filePath, fileContent, 'utf-8');
+    const { name, ...updateData } = validation.data;
+    
+    const result = await collection.updateOne(
+      { name: name },
+      { $set: updateData }
+    );
+
+    if (result.matchedCount === 0) {
+      return { success: false, error: 'Configuration not found.' };
+    }
+
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {
@@ -73,29 +65,39 @@ export async function saveConfiguration(config: Config): Promise<{ success: bool
 }
 
 export async function createConfiguration(config: Config): Promise<{ success: boolean; error?: string }> {
-  await ensureDataDirExists();
-  const filePath = getConfigFilePath(config.name);
+  const collection = await getConfigCollection();
   try {
-    await fs.access(filePath);
-    return { success: false, error: 'A configuration with this name already exists.' };
-  } catch {
-    // File does not exist, so we can create it
-    return saveConfiguration(config);
+    const validation = ConfigSchema.safeParse(config);
+    if (!validation.success) {
+      const errorMessage = validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+      return { success: false, error: errorMessage };
+    }
+    
+    const existing = await collection.findOne({ name: validation.data.name });
+    if (existing) {
+      return { success: false, error: 'A configuration with this name already exists.' };
+    }
+
+    await collection.insertOne(validation.data);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'An unknown error occurred.' };
   }
 }
 
 export async function deleteConfiguration(configName: string): Promise<{ success: boolean; error?: string }> {
-  await ensureDataDirExists();
-  const filePath = getConfigFilePath(configName);
+  const collection = await getConfigCollection();
   try {
-    await fs.unlink(filePath);
+    const result = await collection.deleteOne({ name: configName });
+    if (result.deletedCount === 0) {
+      return { success: false, error: `Configuration '${configName}' not found.` };
+    }
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {
-      // Check if the error is because the file doesn't exist
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return { success: false, error: `Configuration '${configName}' not found.` };
-      }
       return { success: false, error: error.message };
     }
     return { success: false, error: 'An unknown error occurred.' };
