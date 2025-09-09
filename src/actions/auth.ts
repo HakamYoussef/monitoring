@@ -5,7 +5,7 @@ import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { User } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { setSession } from './session';
+import { setSession, clearSession } from './session';
 import { createConfiguration } from './config';
 
 const LoginSchema = z.object({
