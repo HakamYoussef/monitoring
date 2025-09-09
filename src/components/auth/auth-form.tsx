@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,13 +19,14 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
+type LoginSchema = z.infer<typeof loginSchema>;
+
 export function AuthForm() {
-  const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -33,32 +34,30 @@ export function AuthForm() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof loginSchema>) => {
+  const onSubmit = async (values: LoginSchema) => {
     setIsLoading(true);
+    const result = await login(values.email, values.password);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (values.email === 'demo@example.com' && values.password === 'password') {
-        login({ email: values.email });
-        toast({ title: 'Login Successful', description: "Welcome back!" });
-      } else {
-        toast({ variant: 'destructive', title: 'Invalid Credentials', description: 'Please check your email and password.' });
-        setIsLoading(false);
-      }
-    }, 1000);
+    if (result.success) {
+      toast({ title: 'Login Successful', description: "Welcome back!" });
+      // The auth context will handle the redirect.
+    } else {
+      toast({ variant: 'destructive', title: 'Invalid Credentials', description: result.error });
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardHeader>
+            <CardTitle>Login</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your dashboards.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -79,17 +78,25 @@ export function AuthForm() {
                 type="password"
                 {...form.register('password')}
                 disabled={isLoading}
-               />
-               {form.formState.errors.password && (
+              />
+              {form.formState.errors.password && (
                 <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-               )}
+              )}
             </div>
+          </CardContent>
+          <CardFooter className="flex flex-col items-start gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
-          </form>
-        </CardContent>
+             <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );

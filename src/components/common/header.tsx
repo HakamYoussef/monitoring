@@ -13,7 +13,7 @@ export function AppHeader() {
   const { user, logout } = useAuth();
 
   const navLinks = user ? [
-    { href: '/', label: 'Dashboard' },
+    { href: '/dashboard', label: 'Dashboard' },
     { href: '/config', label: 'Configuration' },
   ] : [];
 
@@ -33,7 +33,7 @@ export function AppHeader() {
               href={link.href}
               className={cn(
                 'transition-colors hover:text-foreground/80',
-                pathname === link.href ? 'text-foreground' : 'text-foreground/60'
+                pathname.startsWith(link.href) ? 'text-foreground' : 'text-foreground/60'
               )}
             >
               {link.label}
@@ -43,11 +43,21 @@ export function AppHeader() {
         <div className="flex items-center gap-4">
             <LocationTime />
             {user ? (
-                <Button variant="outline" onClick={logout}>Logout</Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground hidden sm:inline">
+                    {user.email}
+                  </span>
+                  <Button variant="outline" onClick={logout}>Logout</Button>
+                </div>
             ) : (
-                <Button asChild>
-                    <Link href="/login">Login</Link>
+               <div className="flex items-center gap-2">
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Login</Link>
                 </Button>
+                <Button asChild>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </div>
             )}
         </div>
       </div>
