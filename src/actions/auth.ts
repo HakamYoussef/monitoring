@@ -54,18 +54,25 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     
     const { username, password } = validation.data;
 
-    // First, check if Mongo is configured. If not, we can't proceed.
+    // If Mongo is not configured, use a hardcoded default user for demonstration.
     if (!isMongoConfigured()) {
-        return { success: false, error: 'Database is not configured. Please set MONGODB_URI.' };
+        if (username === 'admin' && password === 'password') {
+            await setSession({
+                isLoggedIn: true,
+                username: 'admin',
+                dashboardName: 'Main Dashboard',
+            });
+            revalidatePath('/', 'layout');
+            return { success: true };
+        } else {
+            return { success: false, error: 'Invalid username or password for default user.' };
+        }
     }
     
-    // Now that we know it's configured, ensure the default user exists if needed.
+    // If Mongo is configured, proceed with database authentication.
     await ensureDefaultUser();
-
-    // Get the collection, which should now succeed if configured.
     const collection = await getUserCollection();
-    if (!collection) {
-        // This case would be rare, e.g., if the connection fails mid-request
+     if (!collection) {
         return { success: false, error: 'Could not connect to the database.' };
     }
 
@@ -75,8 +82,6 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
       return { success: false, error: 'Invalid username or password.' };
     }
 
-    // In a real app, you should use a password hashing library like bcrypt.
-    // For this demo, we are comparing plain text passwords.
     const isPasswordValid = user.password === password;
 
     if (!isPasswordValid) {
