@@ -1,16 +1,18 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { WidgetCardWrapper } from './widget-card-wrapper';
 import { useEffect, useState } from 'react';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type StatCardProps = {
   parameter: Parameter;
+  onEnlarge: () => void;
+  isModal?: boolean;
 };
 
-export function StatCard({ parameter }: StatCardProps) {
+export function StatCard({ parameter, onEnlarge, isModal = false }: StatCardProps) {
   const [value, setValue] = useState(0);
   const [previousValue, setPreviousValue] = useState(0);
 
@@ -39,26 +41,36 @@ export function StatCard({ parameter }: StatCardProps) {
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{parameter.name}</CardTitle>
-        <CardDescription>{parameter.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex items-end justify-between">
-        <p className="text-4xl font-bold">
+    <WidgetCardWrapper
+      title={parameter.name}
+      description={parameter.description}
+      onEnlarge={onEnlarge}
+      isModal={isModal}
+      contentClassName="flex flex-col items-center justify-center"
+    >
+      <div className="flex items-baseline">
+        <p className="font-bold" style={{ fontSize: isModal ? '8rem' : '2.25rem' }}>
           {value.toFixed(1)}
-          <span className="ml-1 text-2xl text-muted-foreground">{parameter.unit}</span>
         </p>
-        <div className={cn(
-          "flex items-center text-sm font-medium",
+        <span
+          className="ml-2 text-muted-foreground"
+          style={{ fontSize: isModal ? '2rem' : '1.25rem' }}
+        >
+          {parameter.unit}
+        </span>
+      </div>
+      <div
+        className={cn(
+          'flex items-center font-medium',
           trend === 'up' && 'text-green-500',
           trend === 'down' && 'text-red-500',
-          trend === 'neutral' && 'text-muted-foreground'
-        )}>
-          <TrendIcon className="mr-1 h-4 w-4" />
-          <span>{trend !== 'neutral' ? (Math.abs(value-previousValue)).toFixed(1) : ''}</span>
-        </div>
-      </CardContent>
-    </Card>
+          trend === 'neutral' && 'text-muted-foreground',
+          isModal ? 'text-2xl' : 'text-sm'
+        )}
+      >
+        <TrendIcon className="mr-1 h-5 w-5" />
+        <span>{trend !== 'neutral' ? Math.abs(value - previousValue).toFixed(1) : ''}</span>
+      </div>
+    </WidgetCardWrapper>
   );
 }

@@ -1,15 +1,17 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { WidgetCardWrapper } from './widget-card-wrapper';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 type StatusLightProps = {
   parameter: Parameter;
+  onEnlarge: () => void;
+  isModal?: boolean;
 };
 
-export function StatusLight({ parameter }: StatusLightProps) {
+export function StatusLight({ parameter, onEnlarge, isModal = false }: StatusLightProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -17,13 +19,12 @@ export function StatusLight({ parameter }: StatusLightProps) {
     setValue(initialValue);
 
     const interval = setInterval(() => {
-        setValue(Math.random() * 100);
+      setValue(Math.random() * 100);
     }, 3000 + Math.random() * 2000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Example thresholds: 0-33: OK, 34-66: Warning, 67-100: Alert
   const getStatus = (val: number) => {
     if (val < 33) return { label: 'OK', color: 'bg-green-500', shadow: 'shadow-[0_0_12px_4px] shadow-green-500/70' };
     if (val < 67) return { label: 'Warning', color: 'bg-yellow-500', shadow: 'shadow-[0_0_12px_4px] shadow-yellow-500/70' };
@@ -31,22 +32,24 @@ export function StatusLight({ parameter }: StatusLightProps) {
   };
 
   const status = getStatus(value);
+  const lightSize = isModal ? 'h-48 w-48' : 'h-24 w-24';
+  const labelSize = isModal ? 'text-4xl' : 'text-lg';
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{parameter.name}</CardTitle>
-        <CardDescription>{parameter.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center space-y-4">
-        <div className="relative h-24 w-24">
-            <div className={cn("h-full w-full rounded-full", status.color, status.shadow)} />
-        </div>
-        <p className="font-semibold text-lg">{status.label}</p>
-        <p className="text-sm text-muted-foreground">
-            {value.toFixed(1)} {parameter.unit}
-        </p>
-      </CardContent>
-    </Card>
+    <WidgetCardWrapper
+      title={parameter.name}
+      description={parameter.description}
+      onEnlarge={onEnlarge}
+      isModal={isModal}
+      contentClassName="flex flex-col items-center justify-center space-y-4"
+    >
+      <div className={cn('relative', lightSize)}>
+        <div className={cn('h-full w-full rounded-full', status.color, status.shadow)} />
+      </div>
+      <p className={cn('font-semibold', labelSize)}>{status.label}</p>
+      <p className="text-sm text-muted-foreground">
+        {value.toFixed(1)} {parameter.unit}
+      </p>
+    </WidgetCardWrapper>
   );
 }

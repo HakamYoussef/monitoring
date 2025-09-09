@@ -1,21 +1,24 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { WidgetCardWrapper } from './widget-card-wrapper';
 import { Progress } from '@/components/ui/progress';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type ProgressBarProps = {
   parameter: Parameter;
+  onEnlarge: () => void;
+  isModal?: boolean;
 };
 
-export function ProgressBar({ parameter }: ProgressBarProps) {
+export function ProgressBar({ parameter, onEnlarge, isModal = false }: ProgressBarProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
     const initialValue = 50 + (Math.random() - 0.5) * 40;
     setValue(initialValue);
-    
+
     const interval = setInterval(() => {
       setValue((prevValue) => {
         const change = (Math.random() - 0.5) * 10;
@@ -30,16 +33,16 @@ export function ProgressBar({ parameter }: ProgressBarProps) {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{parameter.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <Progress value={value} />
-        <p className="text-right text-sm text-muted-foreground">
-          {value.toFixed(1)} {parameter.unit}
-        </p>
-      </CardContent>
-    </Card>
+    <WidgetCardWrapper
+      title={parameter.name}
+      onEnlarge={onEnlarge}
+      isModal={isModal}
+      contentClassName="flex flex-col justify-center space-y-4"
+    >
+      <Progress value={value} className={cn(isModal ? 'h-10' : 'h-4')} />
+      <p className="text-right text-muted-foreground" style={{ fontSize: isModal ? '1.5rem' : '0.875rem' }}>
+        {value.toFixed(1)} {parameter.unit}
+      </p>
+    </WidgetCardWrapper>
   );
 }

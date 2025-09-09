@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Parameter } from '@/lib/types';
 import { RadialGauge } from './gauge-chart';
 import { LineChartComponent } from './line-chart';
@@ -9,28 +10,37 @@ import { BarChartComponent } from './bar-chart';
 import { ProgressBar } from './progress-bar';
 import { LinearGauge } from './linear-gauge';
 import { StatusLight } from './status-light';
+import { WidgetModal } from './widget-modal';
 
 type WidgetGridProps = {
   parameters: Parameter[];
 };
 
 export function WidgetGrid({ parameters }: WidgetGridProps) {
-  const renderWidget = (param: Parameter) => {
+  const [selectedWidget, setSelectedWidget] = useState<Parameter | null>(null);
+
+  const renderWidget = (param: Parameter, isModal: boolean = false) => {
+    const commonProps = {
+      parameter: param,
+      isModal: isModal,
+      onEnlarge: () => setSelectedWidget(param),
+    };
+
     switch (param.displayType) {
       case 'radial-gauge':
-        return <RadialGauge parameter={param} />;
+        return <RadialGauge {...commonProps} />;
       case 'line':
-        return <LineChartComponent parameter={param} />;
+        return <LineChartComponent {...commonProps} />;
       case 'stat':
-        return <StatCard parameter={param} />;
+        return <StatCard {...commonProps} />;
       case 'bar':
-        return <BarChartComponent parameter={param} />;
+        return <BarChartComponent {...commonProps} />;
       case 'progress':
-        return <ProgressBar parameter={param} />;
+        return <ProgressBar {...commonProps} />;
       case 'linear-gauge':
-        return <LinearGauge parameter={param} />;
+        return <LinearGauge {...commonProps} />;
       case 'status-light':
-        return <StatusLight parameter={param} />;
+        return <StatusLight {...commonProps} />;
       default:
         return (
           <Card>
@@ -44,10 +54,19 @@ export function WidgetGrid({ parameters }: WidgetGridProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {parameters.map((param) => (
-        <div key={param.id}>{renderWidget(param)}</div>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {parameters.map((param) => (
+          <div key={param.id}>{renderWidget(param)}</div>
+        ))}
+      </div>
+      <WidgetModal isOpen={!!selectedWidget} onOpenChange={() => setSelectedWidget(null)}>
+        {selectedWidget && (
+          <div className="h-[60vh] w-full">
+            {renderWidget(selectedWidget, true)}
+          </div>
+        )}
+      </WidgetModal>
+    </>
   );
 }

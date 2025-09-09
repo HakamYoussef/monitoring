@@ -1,15 +1,17 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { WidgetCardWrapper } from './widget-card-wrapper';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 type LinearGaugeProps = {
   parameter: Parameter;
+  onEnlarge: () => void;
+  isModal?: boolean;
 };
 
-export function LinearGauge({ parameter }: LinearGaugeProps) {
+export function LinearGauge({ parameter, onEnlarge, isModal = false }: LinearGaugeProps) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export function LinearGauge({ parameter }: LinearGaugeProps) {
   }, []);
 
   const percentage = (value / 100) * 100;
-  
+
   const getColor = (val: number) => {
     if (val < 25) return 'bg-green-500';
     if (val < 50) return 'bg-yellow-500';
@@ -38,23 +40,25 @@ export function LinearGauge({ parameter }: LinearGaugeProps) {
     return 'bg-red-500';
   };
 
+  const barHeight = isModal ? 'h-10' : 'h-4';
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{parameter.name}</CardTitle>
-        <CardDescription>{parameter.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="h-4 w-full rounded-full bg-muted">
-          <div
-            className={cn("h-full rounded-full transition-all", getColor(value))}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-        <p className="text-right text-sm text-muted-foreground">
-          {value.toFixed(1)} {parameter.unit}
-        </p>
-      </CardContent>
-    </Card>
+    <WidgetCardWrapper
+      title={parameter.name}
+      description={parameter.description}
+      onEnlarge={onEnlarge}
+      isModal={isModal}
+      contentClassName="flex flex-col justify-center space-y-4"
+    >
+      <div className={cn('w-full rounded-full bg-muted', barHeight)}>
+        <div
+          className={cn('h-full rounded-full transition-all duration-500', getColor(value))}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <p className="text-right text-muted-foreground" style={{ fontSize: isModal ? '1.5rem' : '0.875rem' }}>
+        {value.toFixed(1)} {parameter.unit}
+      </p>
+    </WidgetCardWrapper>
   );
 }

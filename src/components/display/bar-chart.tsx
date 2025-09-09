@@ -1,36 +1,41 @@
 'use client';
 
 import { Parameter } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { WidgetCardWrapper } from './widget-card-wrapper';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 type BarChartComponentProps = {
   parameter: Parameter;
+  onEnlarge: () => void;
+  isModal?: boolean;
 };
 
 const MAX_DATA_POINTS = 10;
-const generateInitialData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-  name: `Point ${i + 1}`,
-  value: Math.random() * 80 + 10,
-}));
+const generateInitialData = () =>
+  Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+    name: `Point ${i + 1}`,
+    value: Math.random() * 80 + 10,
+  }));
 
-export function BarChartComponent({ parameter }: BarChartComponentProps) {
+export function BarChartComponent({ parameter, onEnlarge, isModal = false }: BarChartComponentProps) {
   const [data, setData] = useState(generateInitialData);
 
   useEffect(() => {
-    const generateRandomData = () => Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-      name: `Point ${i + 1}`,
-      value: Math.random() * 80 + 10,
-    }));
-    
+    if (isModal) return;
+    const generateRandomData = () =>
+      Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+        name: `Point ${i + 1}`,
+        value: Math.random() * 80 + 10,
+      }));
+
     const interval = setInterval(() => {
       setData(generateRandomData());
     }, 3000 + Math.random() * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isModal]);
 
   const chartConfig = {
     value: {
@@ -40,46 +45,42 @@ export function BarChartComponent({ parameter }: BarChartComponentProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{parameter.name}</CardTitle>
-        <CardDescription>
-          Bar chart for {parameter.name.toLowerCase()}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
-          <BarChart
-            accessibilityLayer
-            data={data}
-            margin={{
-              top: 5,
-              right: 10,
-              left: 10,
-              bottom: 0,
-            }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={() => ''}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  indicator="dot"
-                  formatter={(value, name) => `${name}: ${Number(value).toFixed(1)} ${parameter.unit || ''}`}
-                />
-              }
-            />
-            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <WidgetCardWrapper
+      title={parameter.name}
+      description={`Bar chart for ${parameter.name.toLowerCase()}.`}
+      onEnlarge={onEnlarge}
+      isModal={isModal}
+      contentClassName="pl-0 pr-4 pb-4"
+    >
+      <ChartContainer config={chartConfig} className="h-full w-full">
+        <RechartsBarChart
+          accessibilityLayer
+          data={data}
+          layout={isModal ? "vertical" : "horizontal"}
+          margin={
+            isModal 
+            ? { top: 20, right: 20, left: 40, bottom: 20 }
+            : { top: 5, right: 10, left: 10, bottom: 0 }
+          }
+        >
+          <CartesianGrid vertical={isModal} horizontal={!isModal} />
+          {isModal ? (
+            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
+          ) : (
+            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={() => ''} />
+          )}
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                indicator="dot"
+                formatter={(value) => `${Number(value).toFixed(1)} ${parameter.unit || ''}`}
+              />
+            }
+          />
+          <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+        </RechartsBarChart>
+      </ChartContainer>
+    </WidgetCardWrapper>
   );
 }
