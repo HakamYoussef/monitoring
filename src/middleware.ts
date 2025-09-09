@@ -39,4 +39,5 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // Matcher to specify which routes the middleware should run on.
   matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
+  runtime: 'nodejs',
 };
