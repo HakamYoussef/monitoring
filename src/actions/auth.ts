@@ -1,48 +1,19 @@
 'use server';
 
 import { z } from 'zod';
-import { getIronSession, IronSession } from 'iron-session';
+import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { User } from '@/lib/types';
-import { SessionData, SessionDataSchema, sessionOptions } from '@/lib/session';
+import { SessionData, sessionOptions } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
+import { setSession, clearSession } from './session';
 
 const LoginSchema = z.object({
   username: z.string(),
   password: z.string(),
 });
-
-// Session Management Functions
-
-export async function getSession(): Promise<SessionData> {
-  const session: IronSession<SessionData> = await getIronSession(cookies(), sessionOptions);
-  
-  const validation = SessionDataSchema.safeParse(session);
-  if (validation.success) {
-    return validation.data;
-  }
-
-  // If the session is uninitialized or invalid, return a default session object
-  return SessionDataSchema.parse({});
-}
-
-export async function setSession(data: Partial<SessionData>) {
-    const session = await getSession();
-    Object.assign(session, data);
-    const ironSession = await getIronSession<SessionData>(cookies(), sessionOptions);
-    ironSession.isLoggedIn = session.isLoggedIn;
-    ironSession.username = session.username;
-    ironSession.dashboardName = session.dashboardName;
-    await ironSession.save();
-}
-
-export async function clearSession() {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
-  session.destroy();
-}
-
 
 // Authentication Actions
 

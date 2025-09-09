@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSession } from '@/actions/auth';
+import { getSession } from '@/actions/session';
 import { SessionData } from '@/lib/session';
 
 

@@ -3,7 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/common/header';
 import { Toaster } from "@/components/ui/toaster";
-import { getSession } from '@/actions/auth';
+import { getSession } from '@/actions/session';
 
 export const metadata: Metadata = {
   title: 'Smart Monitoring',
