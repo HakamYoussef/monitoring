@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ListChecks, Trash2, Loader2 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/common/protected-route';
 
-export default function ConfigurationHubPage() {
+function ConfigurationHub() {
   const [configNames, setConfigNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -144,4 +145,12 @@ export default function ConfigurationHubPage() {
       </AlertDialog>
     </>
   );
+}
+
+export default function ConfigurationHubPage() {
+    return (
+        <ProtectedRoute>
+            <ConfigurationHub />
+        </ProtectedRoute>
+    )
 }

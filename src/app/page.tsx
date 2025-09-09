@@ -2,10 +2,9 @@ import { getConfiguration, getConfigurationNames } from '@/actions/config';
 import { WidgetGrid } from '@/components/display/widget-grid';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ProtectedRoute } from '@/components/common/protected-route';
 
-export default async function DisplayPage() {
-  const configNames = await getConfigurationNames();
-
+function DisplayPageContent({ configNames, config, firstConfigName }: { configNames: string[], config: any, firstConfigName: string | undefined }) {
   if (configNames.length === 0) {
     return (
       <div className="container mx-auto flex h-[calc(100vh-10rem)] flex-col items-center justify-center text-center">
@@ -20,10 +19,6 @@ export default async function DisplayPage() {
     );
   }
 
-  // For demonstration, display the first available configuration.
-  // In a real app, you might let the user choose which one to display.
-  const firstConfigName = configNames[0];
-  const config = await getConfiguration(firstConfigName);
   const { parameters, name } = config;
 
   if (parameters.length === 0) {
@@ -48,4 +43,17 @@ export default async function DisplayPage() {
       <WidgetGrid parameters={parameters} />
     </div>
   );
+}
+
+
+export default async function DisplayPage() {
+    const configNames = await getConfigurationNames();
+    const firstConfigName = configNames[0];
+    const config = firstConfigName ? await getConfiguration(firstConfigName) : null;
+
+    return (
+        <ProtectedRoute>
+            <DisplayPageContent configNames={configNames} config={config} firstConfigName={firstConfigName} />
+        </ProtectedRoute>
+    )
 }
