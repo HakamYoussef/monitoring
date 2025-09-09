@@ -28,6 +28,14 @@ import {
   Plus,
   Trash2,
   LucideProps,
+  Droplets,
+  Wind,
+  CloudRain,
+  Sun,
+  Sunrise,
+  Mountain,
+  Compass,
+  Umbrella,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
@@ -54,6 +62,14 @@ const iconMap: { [key: string]: FC<LucideProps> } = {
   Gauge,
   Type,
   Lightbulb,
+  Droplets,
+  Wind,
+  CloudRain,
+  Sun,
+  Sunrise,
+  Mountain,
+  Compass,
+  Umbrella,
 };
 
 // A component to render the icon in the select list
@@ -229,7 +245,7 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.keys(iconMap).map(iconName => (
+                          {Object.keys(iconMap).sort().map(iconName => (
                             <SelectItem key={iconName} value={iconName}>
                               <IconDisplay iconName={iconName} />
                             </SelectItem>

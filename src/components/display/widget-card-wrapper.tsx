@@ -17,6 +17,14 @@ import {
   Type,
   Lightbulb,
   LucideProps,
+  Droplets,
+  Wind,
+  CloudRain,
+  Sun,
+  Sunrise,
+  Mountain,
+  Compass,
+  Umbrella,
 } from 'lucide-react';
 import { FC, ReactNode } from 'react';
 
@@ -35,6 +43,14 @@ const iconMap: { [key: string]: FC<LucideProps> } = {
   Gauge,
   Type,
   Lightbulb,
+  Droplets,
+  Wind,
+  CloudRain,
+  Sun,
+  Sunrise,
+  Mountain,
+  Compass,
+  Umbrella,
 };
 
 type WidgetCardWrapperProps = {
@@ -60,14 +76,14 @@ export function WidgetCardWrapper({
 
   return (
     <Card className={cn('group relative flex h-full flex-col', className)}>
-      <CardHeader className={cn(headerClassName)}>
+      <CardHeader className={cn('pb-2', headerClassName)}>
         <CardTitle className="text-lg flex items-center gap-2">
           {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
           {title}
         </CardTitle>
-        {description && <CardDescription className="truncate">{description}</CardDescription>}
+        {description && <CardDescription className="truncate pt-1">{description}</CardDescription>}
       </CardHeader>
-      <CardContent className={cn('flex-1', contentClassName)}>{children}</CardContent>
+      <CardContent className={cn('flex-1 flex flex-col justify-center', contentClassName)}>{children}</CardContent>
     </Card>
   );
 }
