@@ -1,22 +1,27 @@
 'use server';
 
-import { Collection, ObjectId } from 'mongodb';
-import { getCollection } from '@/lib/mongodb';
+import { Collection } from 'mongodb';
+import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { Config, ConfigSchema } from '@/lib/types';
 import { notFound } from 'next/navigation';
 
-async function getConfigCollection(): Promise<Collection<Config>> {
+async function getConfigCollection(): Promise<Collection<Config> | null> {
+  if (!isMongoConfigured()) return null;
   return getCollection<Config>('configurations');
 }
 
 export async function getConfiguration(configName: string): Promise<Config> {
   const collection = await getConfigCollection();
+  if (!collection) {
+    // If mongo is not configured or connection failed, we can't find the config.
+    notFound();
+  }
   try {
     const config = await collection.findOne({ name: configName });
     if (!config) {
       notFound();
     }
-    // Convert ObjectId to string for client-side usage if needed, though our schema doesn't have it at the top level.
+    // Convert ObjectId to string for client-side usage if needed.
     return JSON.parse(JSON.stringify(config));
   } catch (error) {
     console.error(`Failed to load configuration '${configName}':`, error);
@@ -25,7 +30,16 @@ export async function getConfiguration(configName: string): Promise<Config> {
 }
 
 export async function getConfigurationNames(): Promise<string[]> {
+  if (!isMongoConfigured()) {
+    console.warn("MongoDB is not configured. Skipping fetching configuration names.");
+    return [];
+  }
   const collection = await getConfigCollection();
+   if (!collection) {
+    // This can happen if the connection fails.
+    console.error("Could not connect to the database to fetch configuration names.");
+    return [];
+  }
   try {
     const configs = await collection.find({}, { projection: { name: 1 } }).toArray();
     return configs.map((c) => c.name);
@@ -37,6 +51,9 @@ export async function getConfigurationNames(): Promise<string[]> {
 
 export async function saveConfiguration(config: Config): Promise<{ success: boolean; error?: string }> {
   const collection = await getConfigCollection();
+  if (!collection) {
+    return { success: false, error: 'Database not configured or connection failed.' };
+  }
   try {
     const validation = ConfigSchema.safeParse(config);
     if (!validation.success) {
@@ -48,12 +65,9 @@ export async function saveConfiguration(config: Config): Promise<{ success: bool
     
     const result = await collection.updateOne(
       { name: name },
-      { $set: updateData }
+      { $set: updateData },
+      { upsert: true } // Use upsert to create if it doesn't exist
     );
-
-    if (result.matchedCount === 0) {
-      return { success: false, error: 'Configuration not found.' };
-    }
 
     return { success: true };
   } catch (error) {
@@ -66,6 +80,9 @@ export async function saveConfiguration(config: Config): Promise<{ success: bool
 
 export async function createConfiguration(config: Config): Promise<{ success: boolean; error?: string }> {
   const collection = await getConfigCollection();
+  if (!collection) {
+    return { success: false, error: 'Database not configured or connection failed.' };
+  }
   try {
     const validation = ConfigSchema.safeParse(config);
     if (!validation.success) {
@@ -90,6 +107,9 @@ export async function createConfiguration(config: Config): Promise<{ success: bo
 
 export async function deleteConfiguration(configName: string): Promise<{ success: boolean; error?: string }> {
   const collection = await getConfigCollection();
+   if (!collection) {
+    return { success: false, error: 'Database not configured or connection failed.' };
+  }
   try {
     const result = await collection.deleteOne({ name: configName });
     if (result.deletedCount === 0) {
