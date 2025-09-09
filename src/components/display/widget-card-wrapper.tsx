@@ -2,10 +2,44 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import {
+  Cpu,
+  Thermometer,
+  MemoryStick,
+  HardDrive,
+  Network,
+  Battery,
+  Power,
+  Info,
+  BarChart,
+  LineChart,
+  Gauge,
+  Type,
+  Lightbulb,
+  LucideProps,
+} from 'lucide-react';
+import { FC, ReactNode } from 'react';
+
+// Map of icon names to Lucide components
+const iconMap: { [key: string]: FC<LucideProps> } = {
+  Cpu,
+  Thermometer,
+  MemoryStick,
+  HardDrive,
+  Network,
+  Battery,
+  Power,
+  Info,
+  BarChart,
+  LineChart,
+  Gauge,
+  Type,
+  Lightbulb,
+};
 
 type WidgetCardWrapperProps = {
   title: string;
+  icon?: string;
   description?: string;
   className?: string;
   headerClassName?: string;
@@ -15,16 +49,22 @@ type WidgetCardWrapperProps = {
 
 export function WidgetCardWrapper({
   title,
+  icon,
   description,
   className,
   headerClassName,
   contentClassName,
   children,
 }: WidgetCardWrapperProps) {
+  const IconComponent = icon ? iconMap[icon] : null;
+
   return (
     <Card className={cn('group relative flex h-full flex-col', className)}>
       <CardHeader className={cn(headerClassName)}>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg flex items-center gap-2">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {title}
+        </CardTitle>
         {description && <CardDescription className="truncate">{description}</CardDescription>}
       </CardHeader>
       <CardContent className={cn('flex-1', contentClassName)}>{children}</CardContent>

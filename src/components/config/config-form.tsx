@@ -10,15 +10,64 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import {
+  Cpu,
+  Thermometer,
+  MemoryStick,
+  HardDrive,
+  Network,
+  Battery,
+  Power,
+  Info,
+  BarChart,
+  LineChart,
+  Gauge,
+  Type,
+  Lightbulb,
+  Loader2,
+  Plus,
+  Trash2,
+  LucideProps,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { useRouter } from 'next/navigation';
+import { FC, forwardRef } from 'react';
 
 type ConfigFormProps = {
   initialConfig?: Config;
   isCreating: boolean;
 };
+
+// Map of icon names to Lucide components
+const iconMap: { [key: string]: FC<LucideProps> } = {
+  Cpu,
+  Thermometer,
+  MemoryStick,
+  HardDrive,
+  Network,
+  Battery,
+  Power,
+  Info,
+  BarChart,
+  LineChart,
+  Gauge,
+  Type,
+  Lightbulb,
+};
+
+// A component to render the icon in the select list
+const IconDisplay = forwardRef<HTMLDivElement, { iconName: string }>(({ iconName, ...props }, ref) => {
+  const Icon = iconMap[iconName];
+  if (!Icon) return null;
+  return (
+    <div ref={ref} {...props} className="flex items-center gap-2">
+      <Icon className="h-4 w-4" />
+      <span>{iconName}</span>
+    </div>
+  );
+});
+IconDisplay.displayName = 'IconDisplay';
 
 export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
   const { toast } = useToast();
@@ -70,6 +119,7 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
       unit: '',
       description: '',
       displayType: 'stat',
+      icon: 'Info', // Default icon
     });
   };
 
@@ -158,6 +208,32 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                           <SelectItem value="bar">Bar Chart</SelectItem>
                           <SelectItem value="progress">Progress Bar</SelectItem>
                           <SelectItem value="status-light">Status Light</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name={`parameters.${index}.icon`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icon</FormLabel>
+                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an icon">
+                              {field.value && <IconDisplay iconName={field.value} />}
+                            </SelectValue>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.keys(iconMap).map(iconName => (
+                            <SelectItem key={iconName} value={iconName}>
+                              <IconDisplay iconName={iconName} />
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

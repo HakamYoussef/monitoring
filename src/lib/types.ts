@@ -6,6 +6,7 @@ export const ParameterSchema = z.object({
   unit: z.string().optional(),
   description: z.string().optional(),
   displayType: z.enum(['radial-gauge', 'line', 'stat', 'bar', 'progress', 'linear-gauge', 'status-light']).default('stat'),
+  icon: z.string().optional(),
 });
 
 export type Parameter = z.infer<typeof ParameterSchema>;

@@ -12,17 +12,18 @@ type LineChartComponentProps = {
 
 const MAX_DATA_POINTS = 20;
 
-const generateInitialData = () => {
-  const randomData = Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
-    time: i,
-    value: Math.random() * 20 + 40,
-  }));
-  return randomData;
-};
 
 export function LineChartComponent({ parameter }: LineChartComponentProps) {
   const [data, setData] = useState<any[]>([]);
 
+  const generateInitialData = () => {
+    const randomData = Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
+      time: i,
+      value: Math.random() * 20 + 40,
+    }));
+    return randomData;
+  };
+  
   useEffect(() => {
     setData(generateInitialData());
 
@@ -59,6 +60,7 @@ export function LineChartComponent({ parameter }: LineChartComponentProps) {
   return (
     <WidgetCardWrapper
       title={parameter.name}
+      icon={parameter.icon}
       description={`Live trend for ${parameter.name.toLowerCase()}.`}
       contentClassName="pl-0 pr-4 pb-4"
     >

@@ -12,14 +12,16 @@ type BarChartComponentProps = {
 
 const MAX_DATA_POINTS = 10;
 
-const generateRandomData = () =>
+
+export function BarChartComponent({ parameter }: BarChartComponentProps) {
+  const [data, setData] = useState<any[]>([]);
+  
+  const generateRandomData = () =>
   Array.from({ length: MAX_DATA_POINTS }, (_, i) => ({
     name: `Point ${i + 1}`,
     value: Math.random() * 80 + 10,
   }));
 
-export function BarChartComponent({ parameter }: BarChartComponentProps) {
-  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
     setData(generateRandomData());
@@ -40,6 +42,7 @@ export function BarChartComponent({ parameter }: BarChartComponentProps) {
   return (
     <WidgetCardWrapper
       title={parameter.name}
+      icon={parameter.icon}
       description={`Bar chart for ${parameter.name.toLowerCase()}.`}
       contentClassName="pl-0 pr-4 pb-4"
     >

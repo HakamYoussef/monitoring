@@ -47,6 +47,7 @@ export function RadialGauge({ parameter }: RadialGaugeProps) {
   return (
     <WidgetCardWrapper
       title={parameter.name}
+      icon={parameter.icon}
       description={parameter.description}
       headerClassName="items-center pb-2"
       contentClassName="flex items-center justify-center p-4"
@@ -55,7 +56,7 @@ export function RadialGauge({ parameter }: RadialGaugeProps) {
         config={{
           value: { label: parameter.name },
         }}
-        className="mx-auto aspect-square h-full w-auto max-w-full"
+        className="mx-auto aspect-square h-full max-w-full"
       >
         <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           <circle

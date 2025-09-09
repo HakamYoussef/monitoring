@@ -39,10 +39,13 @@ export function StatCard({ parameter }: StatCardProps) {
     return (
       <WidgetCardWrapper
         title={parameter.name}
+        icon={parameter.icon}
         description={parameter.description}
         contentClassName="flex flex-col items-center justify-center"
       >
-        <p className="font-bold text-4xl">--.-</p>
+        <div className="h-full flex flex-col items-center justify-center">
+            <p className="font-bold text-4xl">--.-</p>
+        </div>
       </WidgetCardWrapper>
     );
   }
@@ -54,6 +57,7 @@ export function StatCard({ parameter }: StatCardProps) {
   return (
     <WidgetCardWrapper
       title={parameter.name}
+      icon={parameter.icon}
       description={parameter.description}
       contentClassName="flex flex-col items-center justify-center"
     >

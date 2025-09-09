@@ -31,7 +31,7 @@ export function ProgressBar({ parameter }: ProgressBarProps) {
   }, []);
 
   return (
-    <WidgetCardWrapper title={parameter.name} contentClassName="flex flex-col justify-center space-y-4">
+    <WidgetCardWrapper title={parameter.name} icon={parameter.icon} contentClassName="flex flex-col justify-center space-y-4">
       <Progress value={value} className="h-4" />
       <p className="text-right text-muted-foreground">
         {value.toFixed(1)} {parameter.unit}

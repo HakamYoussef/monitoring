@@ -43,6 +43,7 @@ export function LinearGauge({ parameter }: LinearGaugeProps) {
   return (
     <WidgetCardWrapper
       title={parameter.name}
+      icon={parameter.icon}
       description={parameter.description}
       contentClassName="flex flex-col justify-center space-y-4"
     >
