@@ -73,6 +73,8 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     await ensureDefaultUser();
     const collection = await getUserCollection();
      if (!collection) {
+        // This case should theoretically not be hit if isMongoConfigured is true,
+        // but it's good practice for robustness.
         return { success: false, error: 'Could not connect to the database.' };
     }
 
