@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 type DisplayDashboardPageProps = {
-  params: {
+  params: Promise<{
     name: string;
-  };
+  }>;
 };
 
 export default async function DisplayDashboardPage({ params }: DisplayDashboardPageProps) {
-  const configName = decodeURIComponent(params.name);
+  const { name } = await params;
+  const configName = decodeURIComponent(name);
   const config = await getConfiguration(configName);
 
   if (config.parameters.length === 0) {
