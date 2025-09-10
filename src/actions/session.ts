@@ -7,7 +7,8 @@ import { SessionData, SessionDataSchema, sessionOptions } from '@/lib/session';
 // This file is separate from auth.ts to avoid including mongodb in the middleware.
 
 export async function getSession(): Promise<SessionData> {
-  const session: IronSession<SessionData> = await getIronSession(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session: IronSession<SessionData> = await getIronSession(cookieStore, sessionOptions);
   
   const validation = SessionDataSchema.safeParse(session);
   if (validation.success) {
@@ -19,9 +20,10 @@ export async function getSession(): Promise<SessionData> {
 }
 
 export async function setSession(data: Partial<SessionData>) {
+    const cookieStore = await cookies();
     const session = await getSession();
     Object.assign(session, data);
-    const ironSession = await getIronSession<SessionData>(cookies(), sessionOptions);
+    const ironSession = await getIronSession<SessionData>(cookieStore, sessionOptions);
     ironSession.isLoggedIn = session.isLoggedIn;
     ironSession.username = session.username;
     ironSession.dashboardName = session.dashboardName;
@@ -29,6 +31,7 @@ export async function setSession(data: Partial<SessionData>) {
 }
 
 export async function clearSession() {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
   session.destroy();
 }
