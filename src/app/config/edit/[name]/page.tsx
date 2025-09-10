@@ -3,13 +3,14 @@ import { ConfigForm } from '@/components/config/config-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type EditConfigurationPageProps = {
-  params: {
+  params: Promise<{
     name: string;
-  };
+  }>;
 };
 
 export default async function EditConfigurationPage({ params }: EditConfigurationPageProps) {
-  const configName = decodeURIComponent(params.name);
+  const { name } = await params;
+  const configName = decodeURIComponent(name);
   const config = await getConfiguration(configName);
 
   return (
