@@ -1,6 +1,8 @@
 import { getConfiguration } from '@/actions/config';
+import { getSession } from '@/actions/session';
 import { WidgetGrid } from '@/components/display/widget-grid';
 import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 type DisplayDashboardPageProps = {
@@ -12,6 +14,12 @@ type DisplayDashboardPageProps = {
 export default async function DisplayDashboardPage({ params }: DisplayDashboardPageProps) {
   const { name } = await params;
   const configName = decodeURIComponent(name);
+  const session = await getSession();
+
+  if (session.role !== 'admin' && !session.dashboardNames.includes(configName)) {
+    redirect('/dashboard');
+  }
+
   const config = await getConfiguration(configName);
 
   if (config.parameters.length === 0) {
