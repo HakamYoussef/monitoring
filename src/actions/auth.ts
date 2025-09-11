@@ -37,7 +37,7 @@ async function ensureDefaultUser() {
         const defaultUser: User = {
             username: 'admin',
             password: 'password', // In a real app, hash this!
-            dashboardName: 'Main Dashboard',
+            dashboardNames: ['Main Dashboard'],
             role: 'admin',
         };
         await userCollection.insertOne(defaultUser);
@@ -61,7 +61,7 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
             await setSession({
                 isLoggedIn: true,
                 username: 'admin',
-                dashboardName: 'Main Dashboard',
+                dashboardNames: ['Main Dashboard'],
                 role: 'admin',
             });
             revalidatePath('/', 'layout');
@@ -97,7 +97,7 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     await setSession({
         isLoggedIn: true,
         username: user.username,
-        dashboardName: user.dashboardName,
+        dashboardNames: user.dashboardNames,
         role: user.role,
     });
     

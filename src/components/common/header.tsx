@@ -24,7 +24,7 @@ export function AppHeader({ session }: AppHeaderProps) {
       ]
     : [
         {
-          href: `/dashboard/${encodeURIComponent(session.dashboardName ?? '')}`,
+          href: `/dashboard/${encodeURIComponent(session.dashboardNames[0] ?? '')}`,
           label: 'Dashboard',
         },
       ];
