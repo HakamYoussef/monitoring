@@ -35,9 +35,12 @@ export async function middleware(req: NextRequest) {
         }
         if (path.startsWith('/dashboard/')) {
             const requestedDashboard = decodeURIComponent(path.split('/')[2]);
-            if (session.dashboardNames.length > 0 && !session.dashboardNames.includes(requestedDashboard)) {
-                const defaultDashboard = session.dashboardNames[0] || '';
-                const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(defaultDashboard)}`, req.nextUrl);
+            if (!session.dashboardNames.includes(requestedDashboard)) {
+                const defaultDashboard = session.dashboardNames[0];
+                const redirectPath = defaultDashboard
+                    ? `/dashboard/${encodeURIComponent(defaultDashboard)}`
+                    : '/dashboard';
+                const correctDashboardUrl = new URL(redirectPath, req.nextUrl);
                 return NextResponse.redirect(correctDashboardUrl);
             }
         }
