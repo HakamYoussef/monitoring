@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const SessionDataSchema = z.object({
   isLoggedIn: z.boolean().default(false),
   username: z.string().optional(),
+  // Names of dashboards the user can access
   dashboardNames: z.array(z.string()).default([]),
   role: z.enum(['admin', 'user']).default('user'),
 });
