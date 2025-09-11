@@ -11,11 +11,11 @@ export default async function NewAccountPage() {
         <CardHeader>
           <CardTitle>Create New User Account</CardTitle>
           <CardDescription>
-            Create a new user and assign them to a dashboard.
+            Create a new user and assign dashboards to them.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AccountForm dashboardNames={dashboardNames} />
+          <AccountForm dashboardNames={dashboardNames} isCreating={true} />
         </CardContent>
       </Card>
     </div>
