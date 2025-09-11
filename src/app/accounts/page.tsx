@@ -101,7 +101,9 @@ export default function AccountsHubPage() {
                         <Users className="h-5 w-5 text-primary" />
                         <div>
                             <p className="font-medium">{user.username}</p>
-                            <p className="text-sm text-muted-foreground">Dashboard: {user.dashboardNames.join(', ')}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Dashboards: {user.dashboardNames?.join(", ") ?? "N/A"}
+                            </p>
                             <p className="text-sm text-muted-foreground capitalize">Role: {user.role}</p>
                         </div>
                       </div>

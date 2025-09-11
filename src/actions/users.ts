@@ -17,7 +17,11 @@ export async function getUsers(): Promise<User[]> {
   }
   try {
     const users = await collection.find({}, { projection: { password: 0 } }).toArray(); // Don't send passwords to the client
-    return JSON.parse(JSON.stringify(users));
+    const sanitizedUsers: User[] = JSON.parse(JSON.stringify(users));
+    return sanitizedUsers.map((user) => ({
+      ...user,
+      dashboardNames: Array.isArray(user.dashboardNames) ? user.dashboardNames : [],
+    }));
   } catch (error) {
     console.error('Failed to get users:', error);
     return [];
