@@ -102,6 +102,7 @@ export default function AccountsHubPage() {
                         <div>
                             <p className="font-medium">{user.username}</p>
                             <p className="text-sm text-muted-foreground">Dashboard: {user.dashboardName}</p>
+                            <p className="text-sm text-muted-foreground capitalize">Role: {user.role}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">

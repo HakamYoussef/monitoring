@@ -38,6 +38,7 @@ async function ensureDefaultUser() {
             username: 'admin',
             password: 'password', // In a real app, hash this!
             dashboardName: 'Main Dashboard',
+            role: 'admin',
         };
         await userCollection.insertOne(defaultUser);
         console.log("Default admin user created.");
@@ -61,6 +62,7 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
                 isLoggedIn: true,
                 username: 'admin',
                 dashboardName: 'Main Dashboard',
+                role: 'admin',
             });
             revalidatePath('/', 'layout');
             return { success: true };
@@ -96,6 +98,7 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
         isLoggedIn: true,
         username: user.username,
         dashboardName: user.dashboardName,
+        role: user.role,
     });
     
     revalidatePath('/', 'layout');

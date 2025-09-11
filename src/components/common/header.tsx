@@ -14,11 +14,18 @@ export function AppHeader() {
   const pathname = usePathname();
   const { session } = useSession();
   
-  const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/config', label: 'Configuration' },
-    { href: '/accounts', label: 'Accounts' },
-  ];
+  const navLinks = session?.role === 'admin'
+    ? [
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/config', label: 'Configuration' },
+        { href: '/accounts', label: 'Accounts' },
+      ]
+    : [
+        {
+          href: `/dashboard/${encodeURIComponent(session?.dashboardName || '')}`,
+          label: 'Dashboard',
+        },
+      ];
 
   // If not logged in and no DB, don't show the header
   if (!session?.isLoggedIn && !process.env.NEXT_PUBLIC_IS_DEMO) {

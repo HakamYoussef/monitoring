@@ -5,6 +5,7 @@ export const SessionDataSchema = z.object({
   isLoggedIn: z.boolean().default(false),
   username: z.string().optional(),
   dashboardName: z.string().optional(),
+  role: z.enum(['admin', 'user']).default('user'),
 });
 
 export type SessionData = z.infer<typeof SessionDataSchema>;

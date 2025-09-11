@@ -19,19 +19,24 @@ export async function middleware(req: NextRequest) {
   }
 
   if (session.isLoggedIn) {
-     if (publicRoutes.includes(path)) {
-        // If the user is logged in, redirect them from public routes to their assigned dashboard
+    const isAdmin = session.role === 'admin';
+    if (publicRoutes.includes(path)) {
+        // Redirect logged-in users away from public routes
         const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
         return NextResponse.redirect(dashboardUrl);
     }
-    // If user is logged in and trying to access a specific dashboard,
-    // ensure it's the one they are assigned to.
-    if (path.startsWith('/dashboard/')) {
-        const requestedDashboard = decodeURIComponent(path.split('/')[2]);
-        if (session.dashboardName && session.dashboardName !== requestedDashboard) {
-            // If it's not their assigned dashboard, redirect them to the correct one.
-            const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
-            return NextResponse.redirect(correctDashboardUrl);
+    if (!isAdmin) {
+        // Restrict non-admin users from config, accounts, or dashboard selector
+        if (path.startsWith('/config') || path.startsWith('/accounts') || path === '/dashboard') {
+            const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
+            return NextResponse.redirect(dashboardUrl);
+        }
+        if (path.startsWith('/dashboard/')) {
+            const requestedDashboard = decodeURIComponent(path.split('/')[2]);
+            if (session.dashboardName && session.dashboardName !== requestedDashboard) {
+                const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
+                return NextResponse.redirect(correctDashboardUrl);
+            }
         }
     }
   }
