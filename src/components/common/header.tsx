@@ -7,14 +7,16 @@ import { cn } from '@/lib/utils';
 import { PanelsTopLeft } from 'lucide-react';
 import { LocationTime } from './location-time';
 import { UserNav } from './user-nav';
-import { useSession } from '@/hooks/use-session';
+import { SessionData } from '@/lib/session';
 
+interface AppHeaderProps {
+  session: SessionData;
+}
 
-export function AppHeader() {
+export function AppHeader({ session }: AppHeaderProps) {
   const pathname = usePathname();
-  const { session } = useSession();
-  
-  const navLinks = session?.role === 'admin'
+
+  const navLinks = session.role === 'admin'
     ? [
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/config', label: 'Configuration' },
@@ -22,17 +24,10 @@ export function AppHeader() {
       ]
     : [
         {
-          href: `/dashboard/${encodeURIComponent(session?.dashboardName || '')}`,
+          href: `/dashboard/${encodeURIComponent(session.dashboardName ?? '')}`,
           label: 'Dashboard',
         },
       ];
-
-  // If not logged in and no DB, don't show the header
-  if (!session?.isLoggedIn && !process.env.NEXT_PUBLIC_IS_DEMO) {
-      const isDbConfigured = !!process.env.MONGODB_URI;
-      if (isDbConfigured) return null;
-  }
-
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

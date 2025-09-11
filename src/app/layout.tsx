@@ -28,7 +28,7 @@ export default async function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
             <div className="relative flex min-h-screen flex-col">
-                {(session.isLoggedIn || !isDbConnected) && <AppHeader />}
+                {(session.isLoggedIn || !isDbConnected) && <AppHeader session={session} />}
                 <main className="flex-1">{children}</main>
             </div>
             <Toaster />
