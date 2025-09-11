@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Trash2, Loader2 } from 'lucide-react';
+import { Users, Trash2, Loader2, Pencil } from 'lucide-react';
 import { User } from '@/lib/types';
 
 export default function AccountsHubPage() {
@@ -101,11 +101,18 @@ export default function AccountsHubPage() {
                         <Users className="h-5 w-5 text-primary" />
                         <div>
                             <p className="font-medium">{user.username}</p>
-                            <p className="text-sm text-muted-foreground">Dashboard: {user.dashboardNames.join(', ')}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Dashboards: {user.dashboardNames?.join(", ") ?? "N/A"}
+                            </p>
                             <p className="text-sm text-muted-foreground capitalize">Role: {user.role}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button variant="outline" asChild>
+                          <Link href={`/accounts/edit/${encodeURIComponent(user.username)}`}>
+                            <Pencil />
+                          </Link>
+                        </Button>
                         <Button variant="destructive" onClick={() => handleDeleteClick(user.username)}>
                           <Trash2 />
                         </Button>
