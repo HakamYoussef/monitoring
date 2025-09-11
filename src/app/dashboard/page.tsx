@@ -1,11 +1,19 @@
 import { getConfigurationNames } from '@/actions/config';
+import { getSession } from '@/actions/session';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { isMongoConfigured } from '@/lib/mongodb';
 
 export default async function DashboardPage() {
-    const dashboardNames = await getConfigurationNames();
+  const session = await getSession();
+  let dashboardNames = await getConfigurationNames();
+
+  if (session.role !== 'admin') {
+    dashboardNames = dashboardNames.filter((name) =>
+      session.dashboardNames.includes(name)
+    );
+  }
 
   if (!isMongoConfigured() && dashboardNames.length === 0) {
     // If mongo is not configured, we create a default dashboard link for demo purposes.

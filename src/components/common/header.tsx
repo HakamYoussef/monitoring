@@ -23,10 +23,11 @@ export function AppHeader({ session }: AppHeaderProps) {
         { href: '/accounts', label: 'Accounts' },
       ]
     : [
-        {
-          href: `/dashboard/${encodeURIComponent(session.dashboardNames[0] ?? '')}`,
-          label: 'Dashboard',
-        },
+        { href: '/dashboard', label: 'Dashboard' },
+        ...session.dashboardNames.map((name) => ({
+          href: `/dashboard/${encodeURIComponent(name)}`,
+          label: name,
+        })),
       ];
 
   return (
