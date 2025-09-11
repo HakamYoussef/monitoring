@@ -26,3 +26,9 @@ export const UserSchema = z.object({
 });
 
 export type User = z.infer<typeof UserSchema>;
+
+export const UserUpdateSchema = UserSchema.omit({ password: true }).extend({
+  password: UserSchema.shape.password.optional(),
+});
+
+export type UserUpdate = z.infer<typeof UserUpdateSchema>;

@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, UserSchema } from '@/lib/types';
+import { User, UserSchema, UserUpdate, UserUpdateSchema } from '@/lib/types';
 import { createUser, updateUser } from '@/actions/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +25,9 @@ export function AccountForm({ dashboardNames, initialUser, isCreating }: Account
   const [isSaving, startSavingTransition] = useTransition();
   const router = useRouter();
 
-  const form = useForm<User>({
-    resolver: zodResolver(UserSchema),
+  const schema = isCreating ? UserSchema : UserUpdateSchema;
+  const form = useForm<UserUpdate>({
+    resolver: zodResolver(schema),
     defaultValues: {
       username: initialUser?.username ?? '',
       password: '',
@@ -35,12 +36,16 @@ export function AccountForm({ dashboardNames, initialUser, isCreating }: Account
     },
   });
 
-  const onSubmit = (data: User) => {
+  const onSubmit = (data: UserUpdate) => {
+    const payload: UserUpdate = { ...data };
+    if (!payload.password) {
+      delete payload.password;
+    }
+
     startSavingTransition(async () => {
-      const action = isCreating
-        ? createUser
-        : updateUser.bind(null, initialUser?.username || data.username);
-      const result = await action(data);
+      const result = isCreating
+        ? await createUser(payload as User)
+        : await updateUser(initialUser?.username || data.username, payload);
 
       if (result.success) {
         toast({

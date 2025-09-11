@@ -2,7 +2,7 @@
 
 import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
-import { User, UserSchema } from '@/lib/types';
+import { User, UserSchema, UserUpdate, UserUpdateSchema } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 async function getUserCollection(): Promise<Collection<User> | null> {
@@ -77,13 +77,13 @@ export async function createUser(user: User): Promise<{ success: boolean; error?
   }
 }
 
-export async function updateUser(originalUsername: string, user: User): Promise<{ success: boolean; error?: string }> {
+export async function updateUser(originalUsername: string, user: UserUpdate): Promise<{ success: boolean; error?: string }> {
   const collection = await getUserCollection();
   if (!collection) {
     return { success: false, error: 'Database not configured or connection failed.' };
   }
   try {
-    const validation = UserSchema.safeParse(user);
+    const validation = UserUpdateSchema.safeParse(user);
     if (!validation.success) {
       const errorMessage = validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
       return { success: false, error: errorMessage };
