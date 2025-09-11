@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection } from 'mongodb';
+import { MongoClient, Db, Collection, Document } from 'mongodb';
 
 const uri = process.env.MONGODB_URI;
 const dbName = 'smart-monitoring-db'; // You can change this to your preferred database name
@@ -38,7 +38,9 @@ async function connectToDatabase() {
   }
 }
 
-export async function getCollection<T>(collectionName: string): Promise<Collection<T> | null> {
+export async function getCollection<T extends Document>(
+  collectionName: string,
+): Promise<Collection<T> | null> {
   if (!isMongoConfigured()) {
     return null;
   }

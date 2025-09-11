@@ -28,6 +28,7 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
       username: '',
       password: '',
       dashboardName: '',
+      role: 'user',
     },
   });
 
@@ -110,6 +111,30 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
               </Select>
                <FormDescription>
                 The user will only be able to see this dashboard.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Determines the level of access for this user.
               </FormDescription>
               <FormMessage />
             </FormItem>

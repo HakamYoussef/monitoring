@@ -27,6 +27,7 @@ export async function setSession(data: Partial<SessionData>) {
     ironSession.isLoggedIn = session.isLoggedIn;
     ironSession.username = session.username;
     ironSession.dashboardName = session.dashboardName;
+    ironSession.role = session.role;
     await ironSession.save();
 }
 
