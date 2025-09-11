@@ -61,6 +61,7 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
             await setSession({
                 isLoggedIn: true,
                 username: 'admin',
+                // Grant access to the default dashboard when Mongo isn't configured
                 dashboardNames: ['Main Dashboard'],
                 role: 'admin',
             });
@@ -97,7 +98,8 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
     await setSession({
         isLoggedIn: true,
         username: user.username,
-        dashboardNames: user.dashboardNames,
+        // Copy dashboard names from the user record, defaulting to an empty array
+        dashboardNames: [...(user.dashboardNames || [])],
         role: user.role,
     });
     
