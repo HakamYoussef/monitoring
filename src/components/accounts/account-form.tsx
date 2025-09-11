@@ -27,7 +27,7 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
     defaultValues: {
       username: '',
       password: '',
-      dashboardName: '',
+      dashboardNames: [],
       role: 'user',
     },
   });
@@ -87,11 +87,11 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
         />
         <FormField
           control={form.control}
-          name="dashboardName"
+          name="dashboardNames"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Assigned Dashboard</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value[0]}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a dashboard to assign" />
@@ -110,7 +110,7 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
                 </SelectContent>
               </Select>
                <FormDescription>
-                The user will only be able to see this dashboard.
+                The user will only be able to see these dashboards.
               </FormDescription>
               <FormMessage />
             </FormItem>

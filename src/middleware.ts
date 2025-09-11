@@ -22,19 +22,22 @@ export async function middleware(req: NextRequest) {
     const isAdmin = session.role === 'admin';
     if (publicRoutes.includes(path)) {
         // Redirect logged-in users away from public routes
-        const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
+        const defaultDashboard = session.dashboardNames[0] || '';
+        const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(defaultDashboard)}`, req.nextUrl);
         return NextResponse.redirect(dashboardUrl);
     }
     if (!isAdmin) {
         // Restrict non-admin users from config, accounts, or dashboard selector
         if (path.startsWith('/config') || path.startsWith('/accounts') || path === '/dashboard') {
-            const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
+            const defaultDashboard = session.dashboardNames[0] || '';
+            const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(defaultDashboard)}`, req.nextUrl);
             return NextResponse.redirect(dashboardUrl);
         }
         if (path.startsWith('/dashboard/')) {
             const requestedDashboard = decodeURIComponent(path.split('/')[2]);
-            if (session.dashboardName && session.dashboardName !== requestedDashboard) {
-                const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(session.dashboardName || '')}`, req.nextUrl);
+            if (session.dashboardNames.length > 0 && !session.dashboardNames.includes(requestedDashboard)) {
+                const defaultDashboard = session.dashboardNames[0] || '';
+                const correctDashboardUrl = new URL(`/dashboard/${encodeURIComponent(defaultDashboard)}`, req.nextUrl);
                 return NextResponse.redirect(correctDashboardUrl);
             }
         }
