@@ -28,6 +28,25 @@ export async function getUsers(): Promise<User[]> {
   }
 }
 
+export async function getUser(username: string): Promise<User | null> {
+  const collection = await getUserCollection();
+  if (!collection) {
+    return null;
+  }
+  try {
+    const user = await collection.findOne({ username }, { projection: { password: 0 } });
+    if (!user) return null;
+    const sanitizedUser: User = JSON.parse(JSON.stringify(user));
+    return {
+      ...sanitizedUser,
+      dashboardNames: Array.isArray(sanitizedUser.dashboardNames) ? sanitizedUser.dashboardNames : [],
+    };
+  } catch (error) {
+    console.error(`Failed to get user '${username}':`, error);
+    return null;
+  }
+}
+
 export async function createUser(user: User): Promise<{ success: boolean; error?: string }> {
   const collection = await getUserCollection();
   if (!collection) {
@@ -48,6 +67,32 @@ export async function createUser(user: User): Promise<{ success: boolean; error?
     // In a real app, you would hash the password here.
     // For simplicity, we are storing it as plain text.
     await collection.insertOne(validation.data);
+    revalidatePath('/accounts');
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'An unknown error occurred.' };
+  }
+}
+
+export async function updateUser(originalUsername: string, user: User): Promise<{ success: boolean; error?: string }> {
+  const collection = await getUserCollection();
+  if (!collection) {
+    return { success: false, error: 'Database not configured or connection failed.' };
+  }
+  try {
+    const validation = UserSchema.safeParse(user);
+    if (!validation.success) {
+      const errorMessage = validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+      return { success: false, error: errorMessage };
+    }
+
+    const result = await collection.updateOne({ username: originalUsername }, { $set: validation.data });
+    if (result.matchedCount === 0) {
+      return { success: false, error: `User '${originalUsername}' not found.` };
+    }
     revalidatePath('/accounts');
     return { success: true };
   } catch (error) {

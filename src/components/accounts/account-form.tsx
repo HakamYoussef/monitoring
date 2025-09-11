@@ -4,9 +4,10 @@ import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, UserSchema } from '@/lib/types';
-import { createUser } from '@/actions/users';
+import { createUser, updateUser } from '@/actions/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -15,38 +16,44 @@ import { useRouter } from 'next/navigation';
 
 type AccountFormProps = {
   dashboardNames: string[];
+  initialUser?: User;
+  isCreating: boolean;
 };
 
-export function AccountForm({ dashboardNames }: AccountFormProps) {
+export function AccountForm({ dashboardNames, initialUser, isCreating }: AccountFormProps) {
   const { toast } = useToast();
   const [isSaving, startSavingTransition] = useTransition();
   const router = useRouter();
 
   const form = useForm<User>({
     resolver: zodResolver(UserSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-      dashboardNames: [],
-      role: 'user',
-    },
+    defaultValues:
+      initialUser || {
+        username: '',
+        password: '',
+        dashboardNames: [],
+        role: 'user',
+      },
   });
 
   const onSubmit = (data: User) => {
     startSavingTransition(async () => {
-      const result = await createUser(data);
+      const action = isCreating
+        ? createUser
+        : updateUser.bind(null, initialUser?.username || data.username);
+      const result = await action(data);
 
       if (result.success) {
         toast({
-          title: 'User Created',
-          description: `The user "${data.username}" has been created successfully.`,
+          title: `User ${isCreating ? 'Created' : 'Updated'}`,
+          description: `The user "${data.username}" has been ${isCreating ? 'created' : 'updated'} successfully.`,
         });
         router.push('/accounts');
         router.refresh();
       } else {
         toast({
           variant: 'destructive',
-          title: 'Error Creating User',
+          title: `Error ${isCreating ? 'Creating' : 'Updating'} User`,
           description: result.error || 'An unknown error occurred.',
         });
       }
@@ -90,32 +97,39 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
           name="dashboardNames"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Assigned Dashboard</FormLabel>
-              <Select onValueChange={(value) => field.onChange([value])} defaultValue={field.value[0]}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a dashboard to assign" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {dashboardNames.length > 0 ? (
-                    dashboardNames.map(name => (
-                      <SelectItem key={name} value={name}>
-                        {name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-4 text-sm text-muted-foreground">No dashboards found. Please create a configuration first.</div>
-                  )}
-                </SelectContent>
-              </Select>
-               <FormDescription>
+              <FormLabel>Assigned Dashboards</FormLabel>
+              <FormDescription>
                 The user will only be able to see these dashboards.
               </FormDescription>
+              <div className="space-y-2">
+                {dashboardNames.length > 0 ? (
+                  dashboardNames.map((name) => (
+                    <div key={name} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={name}
+                        checked={field.value?.includes(name)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange([...(field.value || []), name]);
+                          } else {
+                            field.onChange((field.value || []).filter((v: string) => v !== name));
+                          }
+                        }}
+                      />
+                      <label htmlFor={name} className="text-sm font-medium leading-none">
+                        {name}
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No dashboards found. Please create a configuration first.</p>
+                )}
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="role"
@@ -147,7 +161,7 @@ export function AccountForm({ dashboardNames }: AccountFormProps) {
           </Button>
           <Button type="submit" disabled={isSaving || dashboardNames.length === 0}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create User
+            {isCreating ? 'Create User' : 'Save Changes'}
           </Button>
         </div>
       </form>

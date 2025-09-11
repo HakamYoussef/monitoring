@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Trash2, Loader2 } from 'lucide-react';
+import { Users, Trash2, Loader2, Pencil } from 'lucide-react';
 import { User } from '@/lib/types';
 
 export default function AccountsHubPage() {
@@ -108,6 +108,11 @@ export default function AccountsHubPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button variant="outline" asChild>
+                          <Link href={`/accounts/edit/${encodeURIComponent(user.username)}`}>
+                            <Pencil />
+                          </Link>
+                        </Button>
                         <Button variant="destructive" onClick={() => handleDeleteClick(user.username)}>
                           <Trash2 />
                         </Button>
