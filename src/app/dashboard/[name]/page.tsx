@@ -1,6 +1,7 @@
 import { getConfiguration } from '@/actions/config';
 import { getSession } from '@/actions/session';
 import { WidgetGrid } from '@/components/display/widget-grid';
+import { DashboardControls } from '@/components/display/dashboard-controls';
 import { Button } from '@/components/ui/button';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -46,6 +47,7 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
             <Link href="/dashboard">Switch Dashboard</Link>
         </Button>
       </div>
+      <DashboardControls controls={config.controls} />
       <WidgetGrid parameters={config.parameters} />
     </div>
   );
