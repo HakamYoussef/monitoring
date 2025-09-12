@@ -97,12 +97,18 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
       {
         name: '',
         parameters: [],
+        controls: [],
       },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'parameters',
+  });
+
+  const { fields: controlFields, append: appendControl, remove: removeControl } = useFieldArray({
+    control: form.control,
+    name: 'controls',
   });
 
   const onSubmit = (data: Config) => {
@@ -147,6 +153,14 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
       description: '',
       displayType: 'stat',
       icon: 'Info', // Default icon
+    });
+  };
+
+  const handleAddControl = () => {
+    appendControl({
+      id: generateId(),
+      type: 'refresh',
+      label: '',
     });
   };
 
@@ -281,10 +295,69 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
           ))}
         </div>
 
+        <div className="space-y-4 mt-8">
+          {controlFields.map((field, index) => (
+            <Card key={field.id} className="relative">
+              <CardHeader>
+                <CardTitle>Control #{index + 1}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name={`controls.${index}.type`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select control type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="refresh">Refresh Button</SelectItem>
+                          <SelectItem value="threshold">Threshold Input</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`controls.${index}.label`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Label</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Label" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4 text-destructive hover:text-destructive"
+                  onClick={() => removeControl(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-4">
           <Button type="button" variant="outline" onClick={handleAddParameter}>
             <Plus className="mr-2 h-4 w-4" />
             Add Parameter
+          </Button>
+          <Button type="button" variant="outline" onClick={handleAddControl}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Control
           </Button>
         </div>
         

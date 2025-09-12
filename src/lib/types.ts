@@ -11,9 +11,18 @@ export const ParameterSchema = z.object({
 
 export type Parameter = z.infer<typeof ParameterSchema>;
 
+export const ControlSchema = z.object({
+  id: z.string().default(() => crypto.randomUUID()),
+  type: z.enum(['refresh', 'threshold']).default('refresh'),
+  label: z.string().optional(),
+});
+
+export type Control = z.infer<typeof ControlSchema>;
+
 export const ConfigSchema = z.object({
   name: z.string().min(1, 'Configuration name is required.'),
   parameters: z.array(ParameterSchema),
+  controls: z.array(ControlSchema).default([]),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

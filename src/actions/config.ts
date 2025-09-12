@@ -15,7 +15,7 @@ export async function getConfiguration(configName: string): Promise<Config> {
   if (!collection) {
     // If mongo is not configured, return a default empty config for demo purposes.
     if (configName === 'Main Dashboard') {
-        return { name: 'Main Dashboard', parameters: [] };
+        return { name: 'Main Dashboard', parameters: [], controls: [] };
     }
     notFound();
   }
@@ -23,12 +23,13 @@ export async function getConfiguration(configName: string): Promise<Config> {
     const config = await collection.findOne({ name: configName });
     if (!config) {
        if (configName === 'Main Dashboard') {
-        return { name: 'Main Dashboard', parameters: [] };
+        return { name: 'Main Dashboard', parameters: [], controls: [] };
       }
       notFound();
     }
-    // Convert ObjectId to string for client-side usage if needed.
-    return JSON.parse(JSON.stringify(config));
+    // Convert ObjectId to string for client-side usage if needed and ensure controls default
+    const parsed = JSON.parse(JSON.stringify(config));
+    return { ...parsed, controls: parsed.controls ?? [] };
   } catch (error) {
     console.error(`Failed to load configuration '${configName}':`, error);
     notFound();

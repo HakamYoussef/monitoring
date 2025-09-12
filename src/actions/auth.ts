@@ -31,7 +31,7 @@ async function ensureDefaultUser() {
         const configCollection = await getCollection('configurations');
         const configCount = await configCollection?.countDocuments();
         if (configCount === 0) {
-            await createConfiguration({ name: 'Main Dashboard', parameters: [] });
+            await createConfiguration({ name: 'Main Dashboard', parameters: [], controls: [] });
         }
 
         const defaultUser: User = {
