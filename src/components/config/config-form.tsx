@@ -101,7 +101,7 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
       },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: parameterFields, append, remove } = useFieldArray({
     control: form.control,
     name: 'parameters',
   });
@@ -184,7 +184,7 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
           )}
         />
         <div className="space-y-4">
-          {fields.map((field, index) => (
+          {parameterFields.map((field, index) => (
             <Card key={field.id} className="relative">
               <CardHeader>
                 <CardTitle>Parameter #{index + 1}</CardTitle>
@@ -336,6 +336,47 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                     </FormItem>
                   )}
                 />
+                {form.watch(`controls.${index}.type`) === 'threshold' && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name={`controls.${index}.parameterId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Parameter</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select parameter" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {parameterFields.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.name || 'Unnamed'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`controls.${index}.threshold`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Threshold</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
