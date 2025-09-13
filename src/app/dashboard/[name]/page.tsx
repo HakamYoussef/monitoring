@@ -47,7 +47,7 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
             <Link href="/dashboard">Switch Dashboard</Link>
         </Button>
       </div>
-      <DashboardControls controls={config.controls} />
+      <DashboardControls controls={config.controls} parameters={config.parameters} />
       <WidgetGrid parameters={config.parameters} />
     </div>
   );
