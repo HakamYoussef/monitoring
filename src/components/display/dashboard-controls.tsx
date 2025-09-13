@@ -1,16 +1,46 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Control } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useParameterData } from '@/hooks/use-parameter-data';
+import type { Control, Parameter } from '@/lib/types';
 
 interface DashboardControlsProps {
   controls: Control[];
+  parameters?: Parameter[];
 }
 
-export function DashboardControls({ controls }: DashboardControlsProps) {
+function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
+  const { data: value } = useParameterData(parameter, 0);
+  const numericValue = typeof value === 'number' ? value : value?.value;
+  const isActive =
+    typeof numericValue === 'number' && control.threshold !== undefined
+      ? numericValue >= control.threshold
+      : false;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Label htmlFor={`control-${control.id}`}>{control.label || 'Threshold'}</Label>
+        <Button id={`control-${control.id}`} variant={isActive ? 'destructive' : 'secondary'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Button>
+      </div>
+      {isActive && (
+        <Alert variant="destructive">
+          <AlertTitle>Alert</AlertTitle>
+          <AlertDescription>
+            {parameter.name} reached {numericValue?.toFixed(1)} {parameter.unit}
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+}
+
+export function DashboardControls({ controls, parameters = [] }: DashboardControlsProps) {
   if (!controls.length) return null;
 
   return (
@@ -28,12 +58,9 @@ export function DashboardControls({ controls }: DashboardControlsProps) {
                 </Button>
               );
             case 'threshold':
-              return (
-                <div key={control.id} className="flex items-center gap-2">
-                  <Label htmlFor={`control-${control.id}`}>{control.label || 'Threshold'}</Label>
-                  <Input id={`control-${control.id}`} type="number" className="w-24" placeholder="0" />
-                </div>
-              );
+              const parameter = parameters.find((p) => p.id === control.parameterId);
+              if (!parameter) return null;
+              return <ThresholdControl key={control.id} control={control} parameter={parameter} />;
             default:
               return null;
           }

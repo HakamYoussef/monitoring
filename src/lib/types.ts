@@ -15,6 +15,8 @@ export const ControlSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
   type: z.enum(['refresh', 'threshold']).default('refresh'),
   label: z.string().optional(),
+  parameterId: z.string().optional(),
+  threshold: z.number().optional(),
 });
 
 export type Control = z.infer<typeof ControlSchema>;
