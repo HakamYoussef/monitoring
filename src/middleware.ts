@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from './actions/session';
 
-const protectedRoutes = ['/dashboard', '/config', '/accounts'];
+const protectedRoutes = ['/dashboard', '/config', '/accounts', '/arduino'];
 const publicRoutes = ['/login'];
 
 export async function middleware(req: NextRequest) {
@@ -27,8 +27,8 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(dashboardUrl);
     }
     if (!isAdmin) {
-        // Restrict non-admin users from config, accounts, or dashboard selector
-        if (path.startsWith('/config') || path.startsWith('/accounts') || path === '/dashboard') {
+        // Restrict non-admin users from config, accounts, arduino, or dashboard selector
+        if (path.startsWith('/config') || path.startsWith('/accounts') || path.startsWith('/arduino') || path === '/dashboard') {
             const defaultDashboard = session.dashboardNames[0] || '';
             const dashboardUrl = new URL(`/dashboard/${encodeURIComponent(defaultDashboard)}`, req.nextUrl);
             return NextResponse.redirect(dashboardUrl);
