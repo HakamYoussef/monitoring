@@ -84,6 +84,15 @@ export default function ArduinoConfigPage() {
               <Input value={serverUrl} onChange={(e) => setServerUrl(e.target.value)} placeholder="https://example.com" />
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`h-3 w-3 rounded-full ${isConnecting ? 'bg-yellow-500 animate-pulse' : port ? 'bg-green-500' : 'bg-red-500'}`}
+              aria-label={port ? 'Arduino connected' : 'Arduino disconnected'}
+            />
+            <span className="text-sm">
+              {isConnecting ? 'Connecting' : port ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
           <div className="flex gap-4">
             <Button type="button" onClick={connectSerial} disabled={isConnecting || !!port}>
               {isConnecting ? 'Connecting...' : port ? 'Connected' : 'Connect USB'}
