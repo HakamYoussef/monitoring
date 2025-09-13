@@ -308,17 +308,32 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select control type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="refresh">Refresh Button</SelectItem>
-                          <SelectItem value="threshold">Threshold Input</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            if (value === 'threshold') {
+                              form.setValue(
+                                `controls.${index}.parameterId`,
+                                form.getValues(`controls.${index}.parameterId`) ?? ''
+                              );
+                              form.setValue(
+                                `controls.${index}.threshold`,
+                                form.getValues(`controls.${index}.threshold`) ?? 0
+                              );
+                            }
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select control type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="refresh">Refresh Button</SelectItem>
+                            <SelectItem value="threshold">Threshold Input</SelectItem>
+                          </SelectContent>
+                        </Select>
                       <FormMessage />
                     </FormItem>
                   )}
