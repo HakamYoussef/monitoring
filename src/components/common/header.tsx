@@ -21,6 +21,7 @@ export function AppHeader({ session }: AppHeaderProps) {
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/config', label: 'Configuration' },
         { href: '/accounts', label: 'Accounts' },
+        { href: '/arduino', label: 'Arduino' },
       ]
     : [
         { href: '/dashboard', label: 'Dashboard' },
