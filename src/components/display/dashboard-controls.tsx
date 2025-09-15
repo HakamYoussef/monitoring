@@ -16,13 +16,18 @@ interface DashboardControlsProps {
 function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
   const { data: value } = useParameterData(parameter, 0);
   const numericValue = typeof value === 'number' ? value : value?.value;
+  const threshold = control.threshold;
   const { toast } = useToast();
   const isActive =
-    typeof numericValue === 'number' && control.threshold !== undefined
-      ? numericValue >= control.threshold
+    typeof numericValue === 'number' && threshold !== undefined
+      ? numericValue >= threshold
       : false;
 
   useEffect(() => {
+    console.log(
+      '[ThresholdControl] value vs threshold',
+      { value: numericValue, threshold, isActive }
+    );
     if (isActive) {
       toast({
         variant: 'destructive',
@@ -30,7 +35,7 @@ function ThresholdControl({ control, parameter }: { control: Control; parameter:
         description: `${parameter.name} reached ${numericValue?.toFixed(1)} ${parameter.unit}`,
       });
     }
-  }, [isActive, numericValue, parameter.name, parameter.unit, toast]);
+  }, [isActive, numericValue, parameter.name, parameter.unit, threshold, toast]);
 
   return (
     <div className="flex flex-col gap-2">
