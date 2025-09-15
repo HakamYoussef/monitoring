@@ -316,9 +316,16 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                                 `controls.${index}.parameterId`,
                                 form.getValues(`controls.${index}.parameterId`) ?? ''
                               );
+                              const currentThreshold = form.getValues(
+                                `controls.${index}.threshold`
+                              );
+                              const parsedThreshold =
+                                typeof currentThreshold === 'number'
+                                  ? currentThreshold
+                                  : Number(currentThreshold);
                               form.setValue(
                                 `controls.${index}.threshold`,
-                                form.getValues(`controls.${index}.threshold`) ?? 0
+                                Number.isNaN(parsedThreshold) ? 0 : parsedThreshold
                               );
                             }
                           }}
@@ -384,7 +391,13 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
                         <FormItem>
                           <FormLabel>Threshold</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input
+                              {...field}
+                              type="number"
+                              placeholder="0"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

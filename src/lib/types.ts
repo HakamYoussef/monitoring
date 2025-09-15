@@ -16,7 +16,7 @@ export const ControlSchema = z.object({
   type: z.enum(['refresh', 'threshold']).default('refresh'),
   label: z.string().optional(),
   parameterId: z.string().optional(),
-  threshold: z.number().optional(),
+  threshold: z.coerce.number().optional(),
 });
 
 export type Control = z.infer<typeof ControlSchema>;
