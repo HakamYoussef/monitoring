@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { useParameterData } from '@/hooks/use-parameter-data';
 import type { Control, Parameter } from '@/lib/types';
 
@@ -15,10 +16,21 @@ interface DashboardControlsProps {
 function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
   const { data: value } = useParameterData(parameter, 0);
   const numericValue = typeof value === 'number' ? value : value?.value;
+  const { toast } = useToast();
   const isActive =
     typeof numericValue === 'number' && control.threshold !== undefined
       ? numericValue >= control.threshold
       : false;
+
+  useEffect(() => {
+    if (isActive) {
+      toast({
+        variant: 'destructive',
+        title: 'Alert',
+        description: `${parameter.name} reached ${numericValue?.toFixed(1)} ${parameter.unit}`,
+      });
+    }
+  }, [isActive, numericValue, parameter.name, parameter.unit, toast]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -28,14 +40,6 @@ function ThresholdControl({ control, parameter }: { control: Control; parameter:
           {isActive ? 'Active' : 'Inactive'}
         </Button>
       </div>
-      {isActive && (
-        <Alert variant="destructive">
-          <AlertTitle>Alert</AlertTitle>
-          <AlertDescription>
-            {parameter.name} reached {numericValue?.toFixed(1)} {parameter.unit}
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 }
