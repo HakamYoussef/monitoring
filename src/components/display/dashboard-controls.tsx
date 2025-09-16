@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useParameterData } from '@/hooks/use-parameter-data';
+import { cn } from '@/lib/utils';
 import type { Control, Parameter } from '@/lib/types';
 
 interface DashboardControlsProps {
@@ -79,13 +80,31 @@ function ToggleControl({ control }: { control: Control }) {
 }
 
 function RefreshControl({ control }: { control: Control }) {
+  const [isActive, setIsActive] = useState(false);
+
+  const handleClick = () => {
+    setIsActive((previous) => !previous);
+  };
+
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
       <div className="space-y-1">
         <p className="font-medium">{control.label || 'Refresh'}</p>
         <p className="text-sm text-muted-foreground">Trigger a manual refresh.</p>
       </div>
-      <Button variant="secondary">{control.label || 'Refresh'}</Button>
+      <Button
+        aria-pressed={isActive}
+        className={cn(
+          'text-white',
+          isActive
+            ? 'bg-green-600 hover:bg-green-500'
+            : 'bg-red-600 hover:bg-red-500'
+        )}
+        onClick={handleClick}
+        variant="secondary"
+      >
+        {isActive ? 'Active' : 'Inactive'}
+      </Button>
     </div>
   );
 }
