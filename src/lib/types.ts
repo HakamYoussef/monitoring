@@ -13,10 +13,11 @@ export type Parameter = z.infer<typeof ParameterSchema>;
 
 export const ControlSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
-  type: z.enum(['refresh', 'threshold']).default('refresh'),
+  type: z.enum(['refresh', 'threshold', 'toggle']).default('refresh'),
   label: z.string().optional(),
   parameterId: z.string().optional(),
   threshold: z.coerce.number().optional(),
+  defaultState: z.boolean().optional(),
 });
 
 export type Control = z.infer<typeof ControlSchema>;

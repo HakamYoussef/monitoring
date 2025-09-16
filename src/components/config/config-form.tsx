@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import {
   Cpu,
@@ -161,6 +162,7 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
       id: generateId(),
       type: 'refresh',
       label: '',
+      defaultState: false,
     });
   };
 
@@ -296,127 +298,174 @@ export function ConfigForm({ initialConfig, isCreating }: ConfigFormProps) {
         </div>
 
         <div className="space-y-4 mt-8">
-          {controlFields.map((field, index) => (
-            <Card key={field.id} className="relative">
-              <CardHeader>
-                <CardTitle>Control #{index + 1}</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name={`controls.${index}.type`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            if (value === 'threshold') {
-                              form.setValue(
-                                `controls.${index}.parameterId`,
-                                form.getValues(`controls.${index}.parameterId`) ?? ''
-                              );
-                              const currentThreshold = form.getValues(
-                                `controls.${index}.threshold`
-                              );
-                              const parsedThreshold =
-                                typeof currentThreshold === 'number'
-                                  ? currentThreshold
-                                  : Number(currentThreshold);
-                              form.setValue(
-                                `controls.${index}.threshold`,
-                                Number.isNaN(parsedThreshold) ? 0 : parsedThreshold
-                              );
-                            }
-                          }}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select control type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="refresh">Refresh Button</SelectItem>
-                            <SelectItem value="threshold">Threshold Input</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`controls.${index}.label`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Label</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Label" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {form.watch(`controls.${index}.type`) === 'threshold' && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name={`controls.${index}.parameterId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Parameter</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          {controlFields.map((controlField, index) => {
+            const controlType = form.watch(`controls.${index}.type`);
+
+            return (
+              <Card key={controlField.id} className="relative">
+                <CardHeader>
+                  <CardTitle>Control #{index + 1}</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name={`controls.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              if (value === 'threshold') {
+                                form.setValue(
+                                  `controls.${index}.parameterId`,
+                                  form.getValues(`controls.${index}.parameterId`) ?? ''
+                                );
+                                const currentThreshold = form.getValues(
+                                  `controls.${index}.threshold`
+                                );
+                                const parsedThreshold =
+                                  typeof currentThreshold === 'number'
+                                    ? currentThreshold
+                                    : Number(currentThreshold);
+                                form.setValue(
+                                  `controls.${index}.threshold`,
+                                  Number.isNaN(parsedThreshold) ? 0 : parsedThreshold
+                                );
+                              } else {
+                                form.setValue(`controls.${index}.parameterId`, undefined);
+                                form.setValue(`controls.${index}.threshold`, undefined);
+                              }
+
+                              if (value === 'toggle') {
+                                const currentDefault = form.getValues(
+                                  `controls.${index}.defaultState`
+                                );
+                                form.setValue(
+                                  `controls.${index}.defaultState`,
+                                  typeof currentDefault === 'boolean' ? currentDefault : false
+                                );
+                              } else {
+                                form.setValue(`controls.${index}.defaultState`, undefined);
+                              }
+                            }}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select parameter" />
+                                <SelectValue placeholder="Select control type" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {parameterFields.map((p) => (
-                                <SelectItem key={p.id} value={p.id}>
-                                  {p.name || 'Unnamed'}
-                                </SelectItem>
-                              ))}
+                              <SelectItem value="refresh">Refresh Button</SelectItem>
+                              <SelectItem value="threshold">Threshold Input</SelectItem>
+                              <SelectItem value="toggle">Toggle Switch</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`controls.${index}.label`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Label</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Label" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {controlType === 'threshold' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name={`controls.${index}.parameterId`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parameter</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select parameter" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {parameterFields.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name || 'Unnamed'}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`controls.${index}.threshold`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Threshold</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="number"
+                                placeholder="0"
+                                value={field.value ?? ''}
+                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                  {controlType === 'toggle' && (
                     <FormField
                       control={form.control}
-                      name={`controls.${index}.threshold`}
-                      render={({ field }) => (
+                      name={`controls.${index}.defaultState`}
+                      render={({ field: toggleField }) => (
                         <FormItem>
-                          <FormLabel>Threshold</FormLabel>
+                          <FormLabel>Default State</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              placeholder="0"
-                              value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                            />
+                            <div className="flex items-center gap-3">
+                              <Switch
+                                id={`control-${controlField.id}-default`}
+                                checked={toggleField.value ?? false}
+                                onCheckedChange={toggleField.onChange}
+                              />
+                              <span className="text-sm text-muted-foreground">
+                                {(toggleField.value ?? false) ? 'On' : 'Off'}
+                              </span>
+                            </div>
                           </FormControl>
+                          <FormDescription>
+                            Choose whether the toggle should be enabled by default.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 right-4 text-destructive hover:text-destructive"
-                  onClick={() => removeControl(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-4 right-4 text-destructive hover:text-destructive"
+                    onClick={() => removeControl(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
