@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -10,10 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useParameterData } from '@/hooks/use-parameter-data';
 import { cn } from '@/lib/utils';
 import type { Control, Parameter } from '@/lib/types';
+import { setControlState } from '@/actions/control-events';
+import type { ControlStateSnapshot } from '@/actions/control-events';
 
 interface DashboardControlsProps {
   controls: Control[];
   parameters: Parameter[];
+  controlStates?: Record<string, ControlStateSnapshot>;
 }
 
 function coerceFiniteNumber(value: unknown): number | undefined {
@@ -66,6 +69,25 @@ function getNumericValue(value: unknown): number | undefined {
   return undefined;
 }
 
+function coerceBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'on', 'yes'].includes(normalized)) {
+      return true;
+    }
+    if (['false', '0', 'off', 'no'].includes(normalized)) {
+      return false;
+    }
+  }
+  return fallback;
+}
+
 function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
   const { data: rawValue } = useParameterData(parameter, null);
   const numericValue = getNumericValue(rawValue);
@@ -104,17 +126,59 @@ function ThresholdControl({ control, parameter }: { control: Control; parameter:
   );
 }
 
-function ToggleControl({ control }: { control: Control }) {
-  const [isEnabled, setIsEnabled] = useState(control.defaultState ?? false);
+function ToggleControl({ control, state }: { control: Control; state?: ControlStateSnapshot }) {
+  const [isEnabled, setIsEnabled] = useState(() =>
+    coerceBoolean(state?.value, control.defaultState ?? false),
+  );
   const { toast } = useToast();
 
   const handleChange = (checked: boolean) => {
-    setIsEnabled(checked);
-    toast({
-      title: control.label || 'Toggle',
-      description: `Switched ${checked ? 'on' : 'off'}.`,
+    const previousValue = isEnabled;
+    const optimisticValue = checked;
+    const label = control.label || 'Toggle';
+
+    setIsEnabled(optimisticValue);
+
+    startTransition(() => {
+      setControlState({ controlId: control.id, type: control.type, value: optimisticValue })
+        .then((result) => {
+          const resolvedValue = coerceBoolean(result.state?.value, optimisticValue);
+          setIsEnabled(resolvedValue);
+
+          if (result.success) {
+            toast({
+              title: label,
+              description: `Switched ${resolvedValue ? 'on' : 'off'}.`,
+            });
+            return;
+          }
+
+          toast({
+            variant: 'destructive',
+            title: `${label} failed`,
+            description: result.error ?? 'Unable to update control state.',
+          });
+        })
+        .catch((error) => {
+          console.error(`Failed to set control state for ${control.id}:`, error);
+          setIsEnabled(previousValue);
+          toast({
+            variant: 'destructive',
+            title: `${label} failed`,
+            description:
+              error instanceof Error
+                ? error.message
+                : 'Unable to communicate with the device.',
+          });
+        });
     });
   };
+
+  useEffect(() => {
+    if (state) {
+      setIsEnabled(coerceBoolean(state.value, control.defaultState ?? false));
+    }
+  }, [control.defaultState, state?.updatedAt, state?.value]);
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -127,12 +191,51 @@ function ToggleControl({ control }: { control: Control }) {
   );
 }
 
-function RefreshControl({ control }: { control: Control }) {
-  const [isActive, setIsActive] = useState(false);
+function RefreshControl({ control, state }: { control: Control; state?: ControlStateSnapshot }) {
+  const [isActive, setIsActive] = useState(() => coerceBoolean(state?.value, false));
+  const { toast } = useToast();
 
   const handleClick = () => {
-    setIsActive((previous) => !previous);
+    const previousValue = isActive;
+    const optimisticValue = !isActive;
+    const label = control.label || 'Refresh';
+
+    setIsActive(optimisticValue);
+
+    startTransition(() => {
+      setControlState({ controlId: control.id, type: control.type, value: optimisticValue })
+        .then((result) => {
+          const resolvedValue = coerceBoolean(result.state?.value, optimisticValue);
+          setIsActive(resolvedValue);
+
+          if (!result.success) {
+            toast({
+              variant: 'destructive',
+              title: `${label} failed`,
+              description: result.error ?? 'Unable to update control state.',
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(`Failed to update refresh control ${control.id}:`, error);
+          setIsActive(previousValue);
+          toast({
+            variant: 'destructive',
+            title: `${label} failed`,
+            description:
+              error instanceof Error
+                ? error.message
+                : 'Unable to communicate with the device.',
+          });
+        });
+    });
   };
+
+  useEffect(() => {
+    if (state) {
+      setIsActive(coerceBoolean(state.value, false));
+    }
+  }, [state?.updatedAt, state?.value]);
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -157,7 +260,7 @@ function RefreshControl({ control }: { control: Control }) {
   );
 }
 
-export function DashboardControls({ controls, parameters }: DashboardControlsProps) {
+export function DashboardControls({ controls, parameters, controlStates }: DashboardControlsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!controls.length) return null;
@@ -176,14 +279,26 @@ export function DashboardControls({ controls, parameters }: DashboardControlsPro
           {controls.map((control) => {
             switch (control.type) {
               case 'refresh':
-                return <RefreshControl key={control.id} control={control} />;
+                return (
+                  <RefreshControl
+                    key={control.id}
+                    control={control}
+                    state={controlStates?.[control.id]}
+                  />
+                );
               case 'threshold': {
                 const parameter = parameters.find((p) => p.id === control.parameterId);
                 if (!parameter) return null;
                 return <ThresholdControl key={control.id} control={control} parameter={parameter} />;
               }
               case 'toggle':
-                return <ToggleControl key={control.id} control={control} />;
+                return (
+                  <ToggleControl
+                    key={control.id}
+                    control={control}
+                    state={controlStates?.[control.id]}
+                  />
+                );
               default:
                 return null;
             }

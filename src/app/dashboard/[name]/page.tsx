@@ -1,4 +1,5 @@
 import { getConfiguration } from '@/actions/config';
+import { getControlStates } from '@/actions/control-events';
 import { getSession } from '@/actions/session';
 import { WidgetGrid } from '@/components/display/widget-grid';
 import { DashboardControls } from '@/components/display/dashboard-controls';
@@ -22,6 +23,7 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
   }
 
   const config = await getConfiguration(configName);
+  const controlStates = await getControlStates(config.controls.map((control) => control.id));
 
   if (config.parameters.length === 0) {
     return (
@@ -44,7 +46,11 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{config.name}</h1>
         <div className="flex items-center gap-2">
-          <DashboardControls controls={config.controls} parameters={config.parameters} />
+          <DashboardControls
+            controls={config.controls}
+            parameters={config.parameters}
+            controlStates={controlStates}
+          />
           <Button asChild variant="outline">
             <Link href="/dashboard">Switch Dashboard</Link>
           </Button>
