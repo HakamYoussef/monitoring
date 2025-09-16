@@ -43,11 +43,13 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{config.name}</h1>
-         <Button asChild variant="outline">
+        <div className="flex items-center gap-2">
+          <DashboardControls controls={config.controls} parameters={config.parameters} />
+          <Button asChild variant="outline">
             <Link href="/dashboard">Switch Dashboard</Link>
-        </Button>
+          </Button>
+        </div>
       </div>
-      <DashboardControls controls={config.controls} parameters={config.parameters} />
       <WidgetGrid parameters={config.parameters} />
     </div>
   );
