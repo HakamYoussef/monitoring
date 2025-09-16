@@ -16,22 +16,70 @@ interface DashboardControlsProps {
   parameters: Parameter[];
 }
 
+function coerceFiniteNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    if (value.trim() === '') {
+      return undefined;
+    }
+
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
+function getNumericValue(value: unknown): number | undefined {
+  const directNumber = coerceFiniteNumber(value);
+  if (directNumber !== undefined) {
+    return directNumber;
+  }
+
+  if (Array.isArray(value)) {
+    for (let index = value.length - 1; index >= 0; index -= 1) {
+      const itemValue = getNumericValue(value[index]);
+      if (itemValue !== undefined) {
+        return itemValue;
+      }
+    }
+    return undefined;
+  }
+
+  if (value && typeof value === 'object' && 'value' in value) {
+    const nestedRaw = (value as { value?: unknown }).value;
+    const nestedValue = coerceFiniteNumber(nestedRaw);
+    if (nestedValue !== undefined) {
+      return nestedValue;
+    }
+
+    if (nestedRaw && nestedRaw !== value) {
+      return getNumericValue(nestedRaw);
+    }
+  }
+
+  return undefined;
+}
+
 function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
-  const { data: value } = useParameterData(parameter, 0);
-  const numericValue = typeof value === 'number' ? value : value?.value;
-  const threshold = control.threshold;
+  const { data: rawValue } = useParameterData(parameter, null);
+  const numericValue = getNumericValue(rawValue);
+  const threshold = coerceFiniteNumber(control.threshold);
   const { toast } = useToast();
   const isActive =
-    typeof numericValue === 'number' && threshold !== undefined
-      ? numericValue >= threshold
-      : false;
+    numericValue !== undefined && threshold !== undefined ? numericValue >= threshold : false;
 
   useEffect(() => {
-    if (isActive) {
+    if (isActive && numericValue !== undefined && threshold !== undefined) {
       toast({
         variant: 'destructive',
         title: 'Alert',
-        description: `${parameter.name} reached ${numericValue?.toFixed(1)} ${parameter.unit}`,
+        description: `${parameter.name} reached ${numericValue?.toFixed(1)} ${parameter.unit ?? ''}`,
       });
     }
   }, [isActive, numericValue, parameter.name, parameter.unit, threshold, toast]);
@@ -45,7 +93,7 @@ function ThresholdControl({ control, parameter }: { control: Control; parameter:
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">
-        {typeof numericValue === 'number'
+        {numericValue !== undefined
           ? `Current value: ${numericValue.toFixed(1)} ${parameter.unit ?? ''}`
           : 'Waiting for data...'}
       </p>
