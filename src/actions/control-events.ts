@@ -3,9 +3,8 @@
 import { Collection } from 'mongodb';
 
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
+import { getControlCollectionName } from '@/lib/collection-names';
 import type { Control } from '@/lib/types';
-
-const CONTROL_STATE_COLLECTION = 'controlStates';
 
 type ControlType = Control['type'];
 
@@ -67,13 +66,16 @@ function getStoreKey(dashboard: string, controlId: string): string {
   return `${dashboard}::${controlId}`;
 }
 
-async function getControlStateCollection(): Promise<Collection<ControlStateDocument> | null> {
+async function getControlStateCollection(
+  dashboard: string,
+): Promise<Collection<ControlStateDocument> | null> {
   if (!isMongoConfigured()) {
     return null;
   }
 
   try {
-    return await getCollection<ControlStateDocument>(CONTROL_STATE_COLLECTION);
+    const collectionName = getControlCollectionName(dashboard);
+    return await getCollection<ControlStateDocument>(collectionName);
   } catch (error) {
     console.error('Failed to access MongoDB control state collection:', error);
     return null;
@@ -102,7 +104,7 @@ function toSnapshot(record: ControlStateRecord): ControlStateSnapshot {
 }
 
 async function persistControlState(record: ControlStateRecord): Promise<void> {
-  const collection = await getControlStateCollection();
+  const collection = await getControlStateCollection(record.dashboard);
   if (collection) {
     try {
       await collection.updateOne(
@@ -203,7 +205,7 @@ export async function getControlStates(
   }
 
   const result: Record<string, ControlStateSnapshot> = {};
-  const collection = await getControlStateCollection();
+  const collection = await getControlStateCollection(dashboardName);
 
   if (collection) {
     try {

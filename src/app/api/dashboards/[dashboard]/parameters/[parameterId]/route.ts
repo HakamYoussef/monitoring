@@ -24,15 +24,17 @@ export async function GET(request: NextRequest, context: HandlerContext) {
   const id = decodeParam(parameterId);
   const url = new URL(request.url);
   const displayType = parseDisplayType(url.searchParams.get('displayType'));
+  const rawValueKey = url.searchParams.get('valueKey');
+  const valueKey = rawValueKey && rawValueKey.trim() ? rawValueKey : undefined;
 
   try {
-    const data = await getParameterData(
-      dashboardName,
-      { id, displayType },
-      { initialize: !!displayType },
-    );
+    const data = await getParameterData(dashboardName, {
+      id,
+      displayType,
+      valueKey,
+    });
 
-    if (data === null) {
+    if (data === null || data === undefined) {
       return NextResponse.json({ error: 'Parameter not found.' }, { status: 404 });
     }
 
@@ -66,6 +68,8 @@ export async function POST(request: NextRequest, context: HandlerContext) {
     (typeof payload.displayType === 'string' ? payload.displayType : null) ?? null,
   );
   const timestampValue = payload.timestamp;
+  const providedValueKey = typeof payload.valueKey === 'string' ? payload.valueKey : undefined;
+  const valueKey = providedValueKey && providedValueKey.trim() ? providedValueKey : undefined;
   let timestamp: Date | undefined;
 
   if (timestampValue !== undefined) {
@@ -86,7 +90,7 @@ export async function POST(request: NextRequest, context: HandlerContext) {
   try {
     const data = await recordParameterValue(
       dashboardName,
-      { id, displayType },
+      { id, displayType, valueKey },
       value,
       timestamp,
     );

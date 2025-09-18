@@ -27,6 +27,7 @@ export function useParameterData<T = unknown>(
 
   const parameterId = parameter.id;
   const displayType = parameter.displayType;
+  const valueKey = parameter.name?.trim() ? parameter.name.trim() : parameter.id;
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +52,7 @@ export function useParameterData<T = unknown>(
         const result = await getLatestParameterData(dashboardName, {
           id: parameterId,
           displayType,
+          valueKey,
         });
         if (cancelled) {
           return;
@@ -87,6 +89,9 @@ export function useParameterData<T = unknown>(
         window.location.origin,
       );
       url.searchParams.set('displayType', displayType);
+      if (valueKey) {
+        url.searchParams.set('valueKey', valueKey);
+      }
 
       const source = new EventSource(url.toString());
       eventSource = source;
@@ -136,7 +141,7 @@ export function useParameterData<T = unknown>(
         clearInterval(fallbackTimer);
       }
     };
-  }, [dashboardName, parameterId, displayType]);
+  }, [dashboardName, parameterId, displayType, valueKey]);
 
   return { data, isLoading, error };
 }
