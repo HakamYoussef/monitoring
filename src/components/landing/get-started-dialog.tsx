@@ -20,6 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { APP_NAME } from '@/lib/branding';
 
 const InquiryFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Please enter your full name.' }),
@@ -58,7 +59,7 @@ export function GetStartedDialog({ triggerClassName }: GetStartedDialogProps) {
 
     try {
       const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'touati.hakam.youssef@gmail.com';
-      const subject = encodeURIComponent('Smart Monitoring Project Inquiry');
+      const subject = encodeURIComponent(`${APP_NAME} Project Inquiry`);
       const body = encodeURIComponent(
         [
           `Full Name: ${values.fullName}`,

@@ -2,6 +2,7 @@ import { ResetPasswordForm } from '@/components/auth/reset-password-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { APP_NAME } from '@/lib/branding';
 
 interface ResetPasswordPageProps {
   params: Promise<{ token: string }>;
@@ -16,7 +17,7 @@ export default async function ResetPasswordPage({ params }: ResetPasswordPagePro
         <CardHeader className="text-center space-y-2">
           <CardTitle>Create a new password</CardTitle>
           <CardDescription>
-            Choose a new password to secure your Smart Monitoring account.
+            Choose a new password to secure your {APP_NAME} account.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
