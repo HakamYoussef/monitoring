@@ -8,6 +8,7 @@ import { PanelsTopLeft } from 'lucide-react';
 import { LocationTime } from './location-time';
 import { UserNav } from './user-nav';
 import { SessionData } from '@/lib/session';
+import { APP_NAME } from '@/lib/branding';
 
 interface AppHeaderProps {
   session: SessionData;
@@ -37,7 +38,7 @@ export function AppHeader({ session }: AppHeaderProps) {
         <div className="mr-6 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <PanelsTopLeft className="h-6 w-6 text-primary" />
-            <span className="font-bold">Smart Monitoring</span>
+            <span className="font-bold">{APP_NAME}</span>
           </Link>
         </div>
         <nav className="flex flex-1 items-center space-x-6 text-sm font-medium">
@@ -55,8 +56,8 @@ export function AppHeader({ session }: AppHeaderProps) {
           ))}
         </nav>
         <div className="flex items-center gap-4">
-            <LocationTime />
-            <UserNav />
+          <LocationTime />
+          <UserNav />
         </div>
       </div>
     </header>

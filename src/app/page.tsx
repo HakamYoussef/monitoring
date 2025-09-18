@@ -5,6 +5,7 @@ import { getSession } from '@/actions/session';
 import { GetStartedDialog } from '@/components/landing/get-started-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { APP_NAME } from '@/lib/branding';
 import {
   Activity,
   AlarmCheck,
@@ -50,8 +51,7 @@ const assurances = [
   },
   {
     title: 'Built for operations',
-    description:
-      'From factory floors to remote field deployments, Smart Monitoring adapts to the environments you rely on.',
+    description: `From factory floors to remote field deployments, ${APP_NAME} adapts to the environments you rely on.`,
     icon: Lock,
   },
 ];
@@ -81,13 +81,13 @@ function LandingContent() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl flex-col items-center px-6 pb-20 pt-24 sm:px-10 lg:px-12">
         <div className="text-center">
           <span className="inline-flex items-center rounded-full bg-white/10 px-4 py-1 text-sm font-medium backdrop-blur">
-            Smart Monitoring Platform
+            {APP_NAME} Platform
           </span>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-6xl">
             Know what is happening across your operations in real time.
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg text-slate-200/80">
-            Smart Monitoring centralizes telemetry, alerting, and automation so that every member of your team can make faster, safer
+            {APP_NAME} centralizes telemetry, alerting, and automation so that every member of your team can make faster, safer
             decisions. Visualize critical metrics, trigger workflows, and deliver reliable service without juggling multiple tools.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -120,7 +120,7 @@ function LandingContent() {
         </div>
 
         <div className="mt-20 w-full rounded-2xl border border-white/10 bg-white/5 p-8 sm:p-10">
-          <h2 className="text-2xl font-semibold text-white sm:text-3xl">Why teams choose Smart Monitoring</h2>
+          <h2 className="text-2xl font-semibold text-white sm:text-3xl">Why teams choose {APP_NAME}</h2>
           <p className="mt-3 max-w-3xl text-base text-slate-200/80">
             Every deployment is unique. We partner with you to understand your goals, tailor dashboards, and roll out automation that
             matches your environment. Share a few details about your project to begin the conversation.
