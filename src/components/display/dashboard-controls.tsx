@@ -1,9 +1,11 @@
 'use client';
 
-import { startTransition, useEffect, useState } from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -88,26 +90,130 @@ function coerceBoolean(value: unknown, fallback: boolean): boolean {
   return fallback;
 }
 
-function ThresholdControl({ control, parameter }: { control: Control; parameter: Parameter }) {
+function ThresholdControl({
+  control,
+  parameter,
+  state,
+}: {
+  control: Control;
+  parameter: Parameter;
+  state?: ControlStateSnapshot;
+}) {
   const { data: rawValue } = useParameterData(parameter, null);
   const numericValue = getNumericValue(rawValue);
-  const threshold = coerceFiniteNumber(control.threshold);
+  const initialThreshold = coerceFiniteNumber(state?.value ?? control.threshold);
+  const [currentThreshold, setCurrentThreshold] = useState<number | undefined>(initialThreshold);
+  const [draftThreshold, setDraftThreshold] = useState<number | undefined>(initialThreshold);
+  const [isSaving, setIsSaving] = useState(false);
+  const previousActiveRef = useRef(false);
   const { toast } = useToast();
+  const unitSuffix = parameter.unit ? ` ${parameter.unit}` : '';
   const isActive =
-    numericValue !== undefined && threshold !== undefined ? numericValue >= threshold : false;
+    numericValue !== undefined && currentThreshold !== undefined
+      ? numericValue >= currentThreshold
+      : false;
 
   useEffect(() => {
-    if (isActive && numericValue !== undefined && threshold !== undefined) {
+    setCurrentThreshold(initialThreshold);
+    setDraftThreshold(initialThreshold);
+  }, [initialThreshold]);
+
+  useEffect(() => {
+    const wasActive = previousActiveRef.current;
+
+    if (isActive && !wasActive && numericValue !== undefined && currentThreshold !== undefined) {
       toast({
         variant: 'destructive',
         title: 'Alert',
-        description: `${parameter.name} reached ${numericValue?.toFixed(1)} ${parameter.unit ?? ''}`,
+        description: `${parameter.name} reached ${numericValue.toFixed(1)}${unitSuffix}`,
       });
     }
-  }, [isActive, numericValue, parameter.name, parameter.unit, threshold, toast]);
+
+    previousActiveRef.current = isActive;
+  }, [currentThreshold, isActive, numericValue, parameter.name, unitSuffix, toast]);
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.valueAsNumber;
+    setDraftThreshold(Number.isFinite(nextValue) ? nextValue : undefined);
+  };
+
+  const resetDraft = () => {
+    setDraftThreshold(currentThreshold);
+  };
+
+  const hasChanges = (draftThreshold ?? null) !== (currentThreshold ?? null);
+
+  const handleSave = () => {
+    if (!hasChanges) {
+      return;
+    }
+
+    const label = control.label || 'Threshold';
+    const previousValue = currentThreshold;
+    const pendingValue = draftThreshold;
+
+    setIsSaving(true);
+    startTransition(() => {
+      setControlState({
+        controlId: control.id,
+        type: control.type,
+        value: pendingValue ?? null,
+      })
+        .then((result) => {
+          setIsSaving(false);
+          const resolvedValue = coerceFiniteNumber(result.state?.value);
+          const nextValue = resolvedValue ?? (pendingValue ?? undefined);
+
+          if (!result.success) {
+            setDraftThreshold(previousValue);
+            toast({
+              variant: 'destructive',
+              title: `${label} update failed`,
+              description: result.error ?? 'Unable to update threshold value.',
+            });
+            return;
+          }
+
+          setCurrentThreshold(nextValue);
+          setDraftThreshold(nextValue);
+          toast({
+            title: label,
+            description:
+              nextValue !== undefined
+                ? `Threshold set to ${nextValue.toFixed(1)}${unitSuffix}.`
+                : 'Threshold cleared.',
+          });
+        })
+        .catch((error) => {
+          console.error(`Failed to update threshold control ${control.id}:`, error);
+          setIsSaving(false);
+          setDraftThreshold(previousValue);
+          toast({
+            variant: 'destructive',
+            title: `${label} update failed`,
+            description:
+              error instanceof Error
+                ? error.message
+                : 'Unable to communicate with the device.',
+          });
+        });
+    });
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSave();
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      resetDraft();
+    }
+  };
 
   return (
-    <div className="space-y-2 rounded-lg border p-4">
+    <div className="space-y-3 rounded-lg border p-4">
       <div className="flex items-center justify-between gap-2">
         <Label htmlFor={`control-${control.id}`}>{control.label || 'Threshold'}</Label>
         <Button id={`control-${control.id}`} variant={isActive ? 'destructive' : 'secondary'}>
@@ -116,12 +222,38 @@ function ThresholdControl({ control, parameter }: { control: Control; parameter:
       </div>
       <p className="text-sm text-muted-foreground">
         {numericValue !== undefined
-          ? `Current value: ${numericValue.toFixed(1)} ${parameter.unit ?? ''}`
+          ? `Current value: ${numericValue.toFixed(1)}${unitSuffix}`
           : 'Waiting for data...'}
       </p>
-      {typeof threshold === 'number' && (
-        <p className="text-xs text-muted-foreground">Threshold: {threshold}</p>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor={`control-${control.id}-threshold-input`} className="text-sm font-medium">
+          Threshold value
+        </Label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Input
+            id={`control-${control.id}-threshold-input`}
+            type="number"
+            inputMode="decimal"
+            value={draftThreshold ?? ''}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            aria-describedby={`control-${control.id}-threshold-help`}
+            disabled={isSaving}
+          />
+          <Button onClick={handleSave} variant="secondary" disabled={!hasChanges || isSaving}>
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <p
+          id={`control-${control.id}-threshold-help`}
+          className="text-xs text-muted-foreground"
+        >
+          {currentThreshold !== undefined
+            ? `Alerts trigger when ${parameter.name} is at or above ${currentThreshold.toFixed(1)}${unitSuffix}.`
+            : 'Set a threshold to receive alerts for this parameter.'}
+          {hasChanges && ' (Unsaved changes)'}
+        </p>
+      </div>
     </div>
   );
 }
@@ -289,7 +421,14 @@ export function DashboardControls({ controls, parameters, controlStates }: Dashb
               case 'threshold': {
                 const parameter = parameters.find((p) => p.id === control.parameterId);
                 if (!parameter) return null;
-                return <ThresholdControl key={control.id} control={control} parameter={parameter} />;
+                return (
+                  <ThresholdControl
+                    key={control.id}
+                    control={control}
+                    parameter={parameter}
+                    state={controlStates?.[control.id]}
+                  />
+                );
               }
               case 'toggle':
                 return (
