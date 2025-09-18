@@ -6,11 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
+type SerialPortLike = {
+  open(options: { baudRate: number }): Promise<void>;
+  writable?: WritableStream<Uint8Array> | null;
+};
+
+type SerialLike = {
+  requestPort(): Promise<SerialPortLike>;
+};
+
+type NavigatorWithSerial = Navigator & {
+  serial?: SerialLike;
+};
+
 export default function ArduinoConfigPage() {
   const [apn, setApn] = useState('');
   const [pin, setPin] = useState('');
   const [serverUrl, setServerUrl] = useState('');
-  const [port, setPort] = useState<any>(null);
+  const [port, setPort] = useState<SerialPortLike | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
@@ -18,7 +31,8 @@ export default function ArduinoConfigPage() {
   const connectSerial = async () => {
     try {
       setIsConnecting(true);
-      const navigatorSerial = (navigator as any).serial;
+      const navigatorWithSerial = navigator as NavigatorWithSerial;
+      const navigatorSerial = navigatorWithSerial.serial;
       if (!navigatorSerial) {
         throw new Error('Web Serial API not supported in this browser');
       }
@@ -26,11 +40,12 @@ export default function ArduinoConfigPage() {
       await requestedPort.open({ baudRate: 9600 });
       setPort(requestedPort);
       toast({ title: 'Serial Connected', description: 'Arduino connection established.' });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to connect to serial port.';
       toast({
         variant: 'destructive',
         title: 'Connection Error',
-        description: err?.message || 'Failed to connect to serial port.',
+        description: message,
       });
     } finally {
       setIsConnecting(false);
@@ -44,16 +59,21 @@ export default function ArduinoConfigPage() {
     }
     try {
       setIsSending(true);
-      const writer = port.writable.getWriter();
+      const writable = port.writable;
+      if (!writable) {
+        throw new Error('Connected port is not writable.');
+      }
+      const writer = writable.getWriter();
       const configString = `${apn},${pin},${serverUrl}\n`;
       await writer.write(new TextEncoder().encode(configString));
       writer.releaseLock();
       toast({ title: 'Configuration Sent', description: 'Settings written to Arduino.' });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to send configuration.';
       toast({
         variant: 'destructive',
         title: 'Send Error',
-        description: err?.message || 'Failed to send configuration.',
+        description: message,
       });
     } finally {
       setIsSending(false);

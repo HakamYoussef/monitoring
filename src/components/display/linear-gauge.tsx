@@ -7,11 +7,13 @@ import { useParameterData } from '@/hooks/use-parameter-data';
 import { Skeleton } from '../ui/skeleton';
 
 type LinearGaugeProps = {
+  dashboardName: string;
   parameter: Parameter;
 };
 
-export function LinearGauge({ parameter }: LinearGaugeProps) {
-  const { data: value, isLoading } = useParameterData(parameter, 50);
+export function LinearGauge({ dashboardName, parameter }: LinearGaugeProps) {
+  const { data, isLoading } = useParameterData<number>(dashboardName, parameter, 50);
+  const value = data ?? 0;
 
   const percentage = (value / 100) * 100;
 
