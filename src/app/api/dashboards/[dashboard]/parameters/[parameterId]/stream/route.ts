@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
 
-import { getParameterData, maybeSimulateParameter } from '@/lib/parameter-data';
+import { getParameterData } from '@/lib/parameter-data';
 import type { Parameter } from '@/lib/types';
 import { subscribeToParameter } from '@/lib/realtime';
 
 const encoder = new TextEncoder();
-const STREAM_SIMULATION_INTERVAL_MS = Number(process.env.PARAMETER_STREAM_SIMULATION_INTERVAL_MS ?? '2500');
-const SIMULATION_ENABLED = process.env.PARAMETER_DATA_SIMULATION !== 'off';
 
 type RouteParams = { dashboard: string; parameterId: string };
 
@@ -34,15 +32,17 @@ export async function GET(request: NextRequest, context: HandlerContext) {
   const id = decodeParam(parameterId);
   const url = new URL(request.url);
   const displayType = parseDisplayType(url.searchParams.get('displayType'));
+  const rawValueKey = url.searchParams.get('valueKey');
+  const valueKey = rawValueKey && rawValueKey.trim() ? rawValueKey : undefined;
 
   try {
-    const initial = await getParameterData(
-      dashboardName,
-      { id, displayType },
-      { initialize: !!displayType },
-    );
+    const initial = await getParameterData(dashboardName, {
+      id,
+      displayType,
+      valueKey,
+    });
 
-    if (initial === null) {
+    if (initial === null || initial === undefined) {
       return new Response('Parameter not found.', { status: 404 });
     }
 
@@ -56,19 +56,6 @@ export async function GET(request: NextRequest, context: HandlerContext) {
           pushEvent(controller, update.data);
         });
 
-        let interval: ReturnType<typeof setInterval> | null = null;
-
-        if (SIMULATION_ENABLED) {
-          interval = setInterval(() => {
-            maybeSimulateParameter(dashboardName, { id, displayType }).catch((error) => {
-              console.error(
-                `Failed to advance simulated data for ${dashboardName}/${id}:`,
-                error,
-              );
-            });
-          }, STREAM_SIMULATION_INTERVAL_MS);
-        }
-
         const keepAlive = setInterval(() => {
           controller.enqueue(encoder.encode(':keep-alive\n\n'));
         }, 15000);
@@ -77,9 +64,6 @@ export async function GET(request: NextRequest, context: HandlerContext) {
           const handler = cleanup;
           cleanup = null;
           unsubscribe();
-          if (interval) {
-            clearInterval(interval);
-          }
           clearInterval(keepAlive);
           controller.close();
           if (handler) {
