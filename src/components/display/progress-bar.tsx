@@ -7,11 +7,13 @@ import { useParameterData } from '@/hooks/use-parameter-data';
 import { Skeleton } from '../ui/skeleton';
 
 type ProgressBarProps = {
+  dashboardName: string;
   parameter: Parameter;
 };
 
-export function ProgressBar({ parameter }: ProgressBarProps) {
-  const { data: value, isLoading } = useParameterData(parameter, 50);
+export function ProgressBar({ dashboardName, parameter }: ProgressBarProps) {
+  const { data, isLoading } = useParameterData<number>(dashboardName, parameter, 50);
+  const value = data ?? 0;
 
   return (
     <WidgetCardWrapper title={parameter.name} icon={parameter.icon} contentClassName="flex flex-col justify-center space-y-4">

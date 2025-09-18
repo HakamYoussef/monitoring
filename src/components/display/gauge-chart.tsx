@@ -8,25 +8,27 @@ import { useParameterData } from '@/hooks/use-parameter-data';
 import { Skeleton } from '../ui/skeleton';
 
 type RadialGaugeProps = {
+  dashboardName: string;
   parameter: Parameter;
 };
 
-export function RadialGauge({ parameter }: RadialGaugeProps) {
-    const { data: value, isLoading } = useParameterData(parameter, 50);
+export function RadialGauge({ dashboardName, parameter }: RadialGaugeProps) {
+  const { data: rawValue, isLoading } = useParameterData<number>(dashboardName, parameter, 50);
 
-    if (isLoading) {
+  if (isLoading) {
     return (
-        <WidgetCardWrapper
+      <WidgetCardWrapper
         title={parameter.name}
         icon={parameter.icon}
         description={parameter.description}
         contentClassName="flex items-center justify-center p-4"
-        >
+      >
         <Skeleton className="aspect-square h-full w-full rounded-full" />
-        </WidgetCardWrapper>
+      </WidgetCardWrapper>
     );
-    }
+  }
 
+  const value = rawValue ?? 0;
 
   const percentage = value / 100;
   const size = 200;

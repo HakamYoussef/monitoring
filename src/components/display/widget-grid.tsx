@@ -11,12 +11,14 @@ import { LinearGauge } from './linear-gauge';
 import { StatusLight } from './status-light';
 
 type WidgetGridProps = {
+  dashboardName: string;
   parameters: Parameter[];
 };
 
-export function WidgetGrid({ parameters }: WidgetGridProps) {
+export function WidgetGrid({ dashboardName, parameters }: WidgetGridProps) {
   const renderWidget = (param: Parameter) => {
     const commonProps = {
+      dashboardName,
       parameter: param,
     };
 
