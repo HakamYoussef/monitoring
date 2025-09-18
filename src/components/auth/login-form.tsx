@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import Link from 'next/link';
 
 const LoginSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -61,7 +62,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input placeholder="Enter your username" autoComplete="username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -74,7 +75,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input type="password" placeholder="••••••••" autoComplete="current-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,6 +85,11 @@ export function LoginForm() {
           {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Log In
         </Button>
+        <div className="text-center text-sm">
+          <Link href="/login/forgot-password" className="text-primary underline-offset-4 hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
       </form>
     </Form>
   );

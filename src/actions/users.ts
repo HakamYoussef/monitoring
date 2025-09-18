@@ -4,20 +4,23 @@ import { Collection } from 'mongodb';
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { User, UserSchema } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { hashPassword } from '@/lib/password';
 
 async function getUserCollection(): Promise<Collection<User> | null> {
   if (!isMongoConfigured()) return null;
   return getCollection<User>('users');
 }
 
-export async function getUsers(): Promise<User[]> {
+type SafeUser = Omit<User, 'password'>;
+
+export async function getUsers(): Promise<SafeUser[]> {
   const collection = await getUserCollection();
   if (!collection) {
     return [];
   }
   try {
     const users = await collection.find({}, { projection: { password: 0 } }).toArray(); // Don't send passwords to the client
-    const sanitizedUsers: User[] = JSON.parse(JSON.stringify(users));
+    const sanitizedUsers: SafeUser[] = JSON.parse(JSON.stringify(users));
     return sanitizedUsers.map((user) => ({
       ...user,
       dashboardNames: Array.isArray(user.dashboardNames) ? user.dashboardNames : [],
@@ -28,7 +31,7 @@ export async function getUsers(): Promise<User[]> {
   }
 }
 
-export async function getUser(username: string): Promise<User | null> {
+export async function getUser(username: string): Promise<SafeUser | null> {
   const collection = await getUserCollection();
   if (!collection) {
     return null;
@@ -36,7 +39,7 @@ export async function getUser(username: string): Promise<User | null> {
   try {
     const user = await collection.findOne({ username }, { projection: { password: 0 } });
     if (!user) return null;
-    const sanitizedUser: User = JSON.parse(JSON.stringify(user));
+    const sanitizedUser: SafeUser = JSON.parse(JSON.stringify(user));
     return {
       ...sanitizedUser,
       dashboardNames: Array.isArray(sanitizedUser.dashboardNames) ? sanitizedUser.dashboardNames : [],
@@ -59,14 +62,26 @@ export async function createUser(user: User): Promise<{ success: boolean; error?
       return { success: false, error: errorMessage };
     }
 
-    const existing = await collection.findOne({ username: validation.data.username });
+    const normalizedEmail = validation.data.email.toLowerCase();
+
+    const existing = await collection.findOne({ $or: [
+      { username: validation.data.username },
+      { email: normalizedEmail },
+    ] });
     if (existing) {
-      return { success: false, error: 'A user with this username already exists.' };
+      if (existing.username === validation.data.username) {
+        return { success: false, error: 'A user with this username already exists.' };
+      }
+      return { success: false, error: 'A user with this email already exists.' };
     }
 
-    // In a real app, you would hash the password here.
-    // For simplicity, we are storing it as plain text.
-    await collection.insertOne(validation.data);
+    const hashedPassword = await hashPassword(validation.data.password);
+
+    await collection.insertOne({
+      ...validation.data,
+      email: normalizedEmail,
+      password: hashedPassword,
+    });
     revalidatePath('/accounts');
     return { success: true };
   } catch (error) {
@@ -89,7 +104,37 @@ export async function updateUser(originalUsername: string, user: User): Promise<
       return { success: false, error: errorMessage };
     }
 
-    const result = await collection.updateOne({ username: originalUsername }, { $set: validation.data });
+    const normalizedEmail = validation.data.email.toLowerCase();
+
+    if (validation.data.username !== originalUsername) {
+      const usernameConflict = await collection.findOne({ username: validation.data.username });
+
+      if (usernameConflict) {
+        return { success: false, error: 'A user with this username already exists.' };
+      }
+    }
+
+    const emailConflict = await collection.findOne({
+      email: normalizedEmail,
+      username: { $ne: originalUsername },
+    });
+
+    if (emailConflict) {
+      return { success: false, error: 'A user with this email already exists.' };
+    }
+
+    const hashedPassword = await hashPassword(validation.data.password);
+
+    const result = await collection.updateOne(
+      { username: originalUsername },
+      {
+        $set: {
+          ...validation.data,
+          email: normalizedEmail,
+          password: hashedPassword,
+        },
+      },
+    );
     if (result.matchedCount === 0) {
       return { success: false, error: `User '${originalUsername}' not found.` };
     }

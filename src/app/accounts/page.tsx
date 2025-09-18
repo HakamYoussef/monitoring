@@ -21,8 +21,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Trash2, Loader2, Pencil } from 'lucide-react';
 import { User } from '@/lib/types';
 
+type ManagedUser = Omit<User, 'password'>;
+
 export default function AccountsHubPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, startDeleteTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -101,6 +103,7 @@ export default function AccountsHubPage() {
                         <Users className="h-5 w-5 text-primary" />
                         <div>
                             <p className="font-medium">{user.username}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
                             <p className="text-sm text-muted-foreground">
                               Dashboards: {user.dashboardNames?.join(", ") ?? "N/A"}
                             </p>

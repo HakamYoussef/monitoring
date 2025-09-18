@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 
 type AccountFormProps = {
   dashboardNames: string[];
-  initialUser?: User;
+  initialUser?: Omit<User, 'password'>;
   isCreating: boolean;
 };
 
@@ -28,12 +28,19 @@ export function AccountForm({ dashboardNames, initialUser, isCreating }: Account
   const form = useForm<User>({
     resolver: zodResolver(UserSchema),
     defaultValues:
-      initialUser || {
-        username: '',
-        password: '',
-        dashboardNames: [],
-        role: 'user',
-      },
+      initialUser
+        ? {
+            ...initialUser,
+            email: initialUser.email,
+            password: '',
+          }
+        : {
+            username: '',
+            email: '',
+            password: '',
+            dashboardNames: [],
+            role: 'user',
+          },
   });
 
   const onSubmit = (data: User) => {
@@ -72,6 +79,20 @@ export function AccountForm({ dashboardNames, initialUser, isCreating }: Account
               <FormControl>
                 <Input placeholder="e.g., new.user" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="name@example.com" {...field} />
+              </FormControl>
+              <FormDescription>Used for password recovery and notifications.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

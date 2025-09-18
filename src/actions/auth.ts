@@ -7,6 +7,7 @@ import { User } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { setSession, clearSession } from './session';
 import { createConfiguration } from './config';
+import { hashPassword, verifyPassword } from '@/lib/password';
 
 const LoginSchema = z.object({
   username: z.string(),
@@ -34,9 +35,12 @@ async function ensureDefaultUser() {
             await createConfiguration({ name: 'Main Dashboard', parameters: [], controls: [] });
         }
 
+        const hashedPassword = await hashPassword('password');
+
         const defaultUser: User = {
             username: 'admin',
-            password: 'password', // In a real app, hash this!
+            email: 'admin@example.com',
+            password: hashedPassword,
             dashboardNames: ['Main Dashboard'],
             role: 'admin',
         };
@@ -89,7 +93,13 @@ export async function login(credentials: z.infer<typeof LoginSchema>) {
 
     // In a real app, you would compare a hashed password.
     // For this demo, we're doing a simple string comparison.
-    const isPasswordValid = user.password === password;
+    let isPasswordValid = await verifyPassword(password, user.password);
+
+    if (!isPasswordValid && user.password === password) {
+      const newHashedPassword = await hashPassword(password);
+      await collection.updateOne({ username }, { $set: { password: newHashedPassword } });
+      isPasswordValid = true;
+    }
 
     if (!isPasswordValid) {
       return { success: false, error: 'Invalid username or password.' };
