@@ -32,9 +32,18 @@ export type Config = z.infer<typeof ConfigSchema>;
 
 export const UserSchema = z.object({
   username: z.string().min(1, 'Username is required.'),
+  email: z.string().email('A valid email is required.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
   dashboardNames: z.array(z.string()),
   role: z.enum(['admin', 'user']).default('user'),
 });
 
 export type User = z.infer<typeof UserSchema>;
+
+export const PasswordResetTokenSchema = z.object({
+  username: z.string().min(1, 'Username is required.'),
+  tokenHash: z.string().min(1, 'Token hash is required.'),
+  expiresAt: z.date(),
+});
+
+export type PasswordResetToken = z.infer<typeof PasswordResetTokenSchema>;
