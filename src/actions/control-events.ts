@@ -10,6 +10,7 @@ const CONTROL_STATE_COLLECTION = 'controlStates';
 type ControlType = Control['type'];
 
 export type SetControlStateInput = {
+  dashboardName: string;
   controlId: string;
   type: ControlType;
   value: unknown;
@@ -30,14 +31,16 @@ export type SetControlStateResult = {
 };
 
 interface ControlStateDocument {
+  dashboard: string;
   controlId: string;
   type: ControlType;
-  value: any;
+  value: unknown;
   updatedAt: Date;
   lastError?: string | null;
 }
 
 type ControlStateRecord = {
+  dashboard: string;
   controlId: string;
   type: ControlType;
   value: unknown;
@@ -51,12 +54,18 @@ type IntegrationResult = {
   message?: string;
 };
 
-const globalStore = globalThis as typeof globalThis & {
+type ControlStateStore = typeof globalThis & {
   __controlStateStore?: Map<string, ControlStateRecord>;
 };
 
+const globalStore = globalThis as ControlStateStore;
+
 const inMemoryStore =
   globalStore.__controlStateStore ?? (globalStore.__controlStateStore = new Map<string, ControlStateRecord>());
+
+function getStoreKey(dashboard: string, controlId: string): string {
+  return `${dashboard}::${controlId}`;
+}
 
 async function getControlStateCollection(): Promise<Collection<ControlStateDocument> | null> {
   if (!isMongoConfigured()) {
@@ -73,6 +82,7 @@ async function getControlStateCollection(): Promise<Collection<ControlStateDocum
 
 function toRecord(document: ControlStateDocument): ControlStateRecord {
   return {
+    dashboard: document.dashboard,
     controlId: document.controlId,
     type: document.type,
     value: document.value,
@@ -96,7 +106,7 @@ async function persistControlState(record: ControlStateRecord): Promise<void> {
   if (collection) {
     try {
       await collection.updateOne(
-        { controlId: record.controlId },
+        { dashboard: record.dashboard, controlId: record.controlId },
         {
           $set: {
             type: record.type,
@@ -108,11 +118,14 @@ async function persistControlState(record: ControlStateRecord): Promise<void> {
         { upsert: true },
       );
     } catch (error) {
-      console.error('Failed to persist control state to MongoDB:', error);
+      console.error(
+        `Failed to persist control state to MongoDB for ${record.dashboard}/${record.controlId}:`,
+        error,
+      );
     }
   }
 
-  inMemoryStore.set(record.controlId, record);
+  inMemoryStore.set(getStoreKey(record.dashboard, record.controlId), record);
 }
 
 function normalizeError(error: unknown, fallback: string): string {
@@ -142,7 +155,7 @@ async function relayToArduino(input: SetControlStateInput): Promise<IntegrationR
     });
 
     const rawText = await response.text();
-    let parsed: any = null;
+    let parsed: unknown = null;
 
     if (rawText) {
       try {
@@ -153,16 +166,26 @@ async function relayToArduino(input: SetControlStateInput): Promise<IntegrationR
     }
 
     if (!response.ok) {
-      const message = typeof parsed?.error === 'string' ? parsed.error : `Request failed with status ${response.status}`;
+      const parsedObject = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
+      const message =
+        parsedObject && typeof parsedObject.error === 'string'
+          ? parsedObject.error
+          : `Request failed with status ${response.status}`;
       console.error(`Arduino endpoint responded with status ${response.status}:`, message);
       return {
         success: false,
-        value: parsed?.value,
+        value: parsedObject && 'value' in parsedObject ? parsedObject.value : undefined,
         message,
       };
     }
 
-    const resolvedValue = parsed?.value ?? parsed?.state ?? parsed ?? input.value;
+    const parsedObject = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
+    const resolvedValue =
+      parsedObject && 'value' in parsedObject
+        ? parsedObject.value
+        : parsedObject && 'state' in parsedObject
+          ? parsedObject.state
+          : parsed ?? input.value;
     return { success: true, value: resolvedValue };
   } catch (error) {
     const message = normalizeError(error, 'Unable to reach the Arduino endpoint.');
@@ -171,7 +194,10 @@ async function relayToArduino(input: SetControlStateInput): Promise<IntegrationR
   }
 }
 
-export async function getControlStates(controlIds: string[]): Promise<Record<string, ControlStateSnapshot>> {
+export async function getControlStates(
+  dashboardName: string,
+  controlIds: string[],
+): Promise<Record<string, ControlStateSnapshot>> {
   if (!Array.isArray(controlIds) || controlIds.length === 0) {
     return {};
   }
@@ -181,10 +207,12 @@ export async function getControlStates(controlIds: string[]): Promise<Record<str
 
   if (collection) {
     try {
-      const documents = await collection.find({ controlId: { $in: controlIds } }).toArray();
+      const documents = await collection
+        .find({ dashboard: dashboardName, controlId: { $in: controlIds } })
+        .toArray();
       for (const document of documents) {
         const record = toRecord(document);
-        inMemoryStore.set(record.controlId, record);
+        inMemoryStore.set(getStoreKey(record.dashboard, record.controlId), record);
         result[record.controlId] = toSnapshot(record);
       }
     } catch (error) {
@@ -194,7 +222,7 @@ export async function getControlStates(controlIds: string[]): Promise<Record<str
 
   for (const id of controlIds) {
     if (!result[id]) {
-      const record = inMemoryStore.get(id);
+      const record = inMemoryStore.get(getStoreKey(dashboardName, id));
       if (record) {
         result[id] = toSnapshot(record);
       }
@@ -205,6 +233,12 @@ export async function getControlStates(controlIds: string[]): Promise<Record<str
 }
 
 export async function setControlState(input: SetControlStateInput): Promise<SetControlStateResult> {
+  if (!input.dashboardName) {
+    const message = 'A dashboard name is required to update control state.';
+    console.error(message, input);
+    return { success: false, error: message };
+  }
+
   if (!input.controlId) {
     const message = 'A controlId is required to update control state.';
     console.error(message, input);
@@ -220,6 +254,7 @@ export async function setControlState(input: SetControlStateInput): Promise<SetC
   try {
     const integration = await relayToArduino(input);
     const record: ControlStateRecord = {
+      dashboard: input.dashboardName,
       controlId: input.controlId,
       type: input.type,
       value: integration.value ?? input.value,
@@ -244,9 +279,13 @@ export async function setControlState(input: SetControlStateInput): Promise<SetC
     };
   } catch (error) {
     const message = normalizeError(error, 'Unexpected failure while updating the control.');
-    console.error(`Unhandled error while setting control state for ${input.controlId}:`, error);
+    console.error(
+      `Unhandled error while setting control state for ${input.dashboardName}/${input.controlId}:`,
+      error,
+    );
 
     const record: ControlStateRecord = {
+      dashboard: input.dashboardName,
       controlId: input.controlId,
       type: input.type,
       value: input.value,

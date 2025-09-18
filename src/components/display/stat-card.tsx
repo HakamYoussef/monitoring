@@ -8,11 +8,16 @@ import { useParameterData } from '@/hooks/use-parameter-data';
 import { Skeleton } from '../ui/skeleton';
 
 type StatCardProps = {
+  dashboardName: string;
   parameter: Parameter;
 };
 
-export function StatCard({ parameter }: StatCardProps) {
-  const { data, isLoading } = useParameterData(parameter);
+export function StatCard({ dashboardName, parameter }: StatCardProps) {
+  const { data, isLoading } = useParameterData<{ value: number; previousValue: number }>(
+    dashboardName,
+    parameter,
+    null,
+  );
 
   if (isLoading || !data) {
     return (
@@ -23,8 +28,8 @@ export function StatCard({ parameter }: StatCardProps) {
         contentClassName="flex flex-col items-center justify-center"
       >
         <div className="h-full flex flex-col items-center justify-center gap-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-5 w-16" />
         </div>
       </WidgetCardWrapper>
     );
@@ -46,11 +51,7 @@ export function StatCard({ parameter }: StatCardProps) {
         <p className="font-bold text-4xl">
           {value.toFixed(1)}
         </p>
-        <span
-          className="ml-2 text-muted-foreground text-xl"
-        >
-          {parameter.unit}
-        </span>
+        <span className="ml-2 text-muted-foreground text-xl">{parameter.unit}</span>
       </div>
       <div
         className={cn(

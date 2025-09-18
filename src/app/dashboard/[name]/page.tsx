@@ -23,7 +23,10 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
   }
 
   const config = await getConfiguration(configName);
-  const controlStates = await getControlStates(config.controls.map((control) => control.id));
+  const controlStates = await getControlStates(
+    config.name,
+    config.controls.map((control) => control.id),
+  );
 
   if (config.parameters.length === 0) {
     return (
@@ -47,6 +50,7 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
         <h1 className="text-3xl font-bold">{config.name}</h1>
         <div className="flex items-center gap-2">
           <DashboardControls
+            dashboardName={config.name}
             controls={config.controls}
             parameters={config.parameters}
             controlStates={controlStates}
@@ -56,7 +60,7 @@ export default async function DisplayDashboardPage({ params }: DisplayDashboardP
           </Button>
         </div>
       </div>
-      <WidgetGrid parameters={config.parameters} />
+      <WidgetGrid dashboardName={config.name} parameters={config.parameters} />
     </div>
   );
 }

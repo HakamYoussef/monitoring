@@ -16,6 +16,7 @@ import { setControlState } from '@/actions/control-events';
 import type { ControlStateSnapshot } from '@/actions/control-events';
 
 interface DashboardControlsProps {
+  dashboardName: string;
   controls: Control[];
   parameters: Parameter[];
   controlStates?: Record<string, ControlStateSnapshot>;
@@ -91,15 +92,17 @@ function coerceBoolean(value: unknown, fallback: boolean): boolean {
 }
 
 function ThresholdControl({
+  dashboardName,
   control,
   parameter,
   state,
 }: {
+  dashboardName: string;
   control: Control;
   parameter: Parameter;
   state?: ControlStateSnapshot;
 }) {
-  const { data: rawValue } = useParameterData(parameter, null);
+  const { data: rawValue } = useParameterData(dashboardName, parameter, null);
   const numericValue = getNumericValue(rawValue);
   const initialThreshold = coerceFiniteNumber(state?.value ?? control.threshold);
   const [currentThreshold, setCurrentThreshold] = useState<number | undefined>(initialThreshold);
@@ -155,6 +158,7 @@ function ThresholdControl({
     setIsSaving(true);
     startTransition(() => {
       setControlState({
+        dashboardName,
         controlId: control.id,
         type: control.type,
         value: pendingValue ?? null,
@@ -258,7 +262,15 @@ function ThresholdControl({
   );
 }
 
-function ToggleControl({ control, state }: { control: Control; state?: ControlStateSnapshot }) {
+function ToggleControl({
+  dashboardName,
+  control,
+  state,
+}: {
+  dashboardName: string;
+  control: Control;
+  state?: ControlStateSnapshot;
+}) {
   const [isEnabled, setIsEnabled] = useState(() =>
     coerceBoolean(state?.value, control.defaultState ?? false),
   );
@@ -272,7 +284,12 @@ function ToggleControl({ control, state }: { control: Control; state?: ControlSt
     setIsEnabled(optimisticValue);
 
     startTransition(() => {
-      setControlState({ controlId: control.id, type: control.type, value: optimisticValue })
+      setControlState({
+        dashboardName,
+        controlId: control.id,
+        type: control.type,
+        value: optimisticValue,
+      })
         .then((result) => {
           const resolvedValue = coerceBoolean(result.state?.value, optimisticValue);
           setIsEnabled(resolvedValue);
@@ -310,7 +327,7 @@ function ToggleControl({ control, state }: { control: Control; state?: ControlSt
     if (state) {
       setIsEnabled(coerceBoolean(state.value, control.defaultState ?? false));
     }
-  }, [control.defaultState, state?.updatedAt, state?.value]);
+  }, [control.defaultState, state]);
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -323,7 +340,15 @@ function ToggleControl({ control, state }: { control: Control; state?: ControlSt
   );
 }
 
-function RefreshControl({ control, state }: { control: Control; state?: ControlStateSnapshot }) {
+function RefreshControl({
+  dashboardName,
+  control,
+  state,
+}: {
+  dashboardName: string;
+  control: Control;
+  state?: ControlStateSnapshot;
+}) {
   const [isActive, setIsActive] = useState(() => coerceBoolean(state?.value, false));
   const { toast } = useToast();
 
@@ -335,7 +360,12 @@ function RefreshControl({ control, state }: { control: Control; state?: ControlS
     setIsActive(optimisticValue);
 
     startTransition(() => {
-      setControlState({ controlId: control.id, type: control.type, value: optimisticValue })
+      setControlState({
+        dashboardName,
+        controlId: control.id,
+        type: control.type,
+        value: optimisticValue,
+      })
         .then((result) => {
           const resolvedValue = coerceBoolean(result.state?.value, optimisticValue);
           setIsActive(resolvedValue);
@@ -367,7 +397,7 @@ function RefreshControl({ control, state }: { control: Control; state?: ControlS
     if (state) {
       setIsActive(coerceBoolean(state.value, false));
     }
-  }, [state?.updatedAt, state?.value]);
+  }, [state]);
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -392,7 +422,12 @@ function RefreshControl({ control, state }: { control: Control; state?: ControlS
   );
 }
 
-export function DashboardControls({ controls, parameters, controlStates }: DashboardControlsProps) {
+export function DashboardControls({
+  dashboardName,
+  controls,
+  parameters,
+  controlStates,
+}: DashboardControlsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!controls.length) return null;
@@ -413,6 +448,7 @@ export function DashboardControls({ controls, parameters, controlStates }: Dashb
               case 'refresh':
                 return (
                   <RefreshControl
+                    dashboardName={dashboardName}
                     key={control.id}
                     control={control}
                     state={controlStates?.[control.id]}
@@ -423,6 +459,7 @@ export function DashboardControls({ controls, parameters, controlStates }: Dashb
                 if (!parameter) return null;
                 return (
                   <ThresholdControl
+                    dashboardName={dashboardName}
                     key={control.id}
                     control={control}
                     parameter={parameter}
@@ -433,6 +470,7 @@ export function DashboardControls({ controls, parameters, controlStates }: Dashb
               case 'toggle':
                 return (
                   <ToggleControl
+                    dashboardName={dashboardName}
                     key={control.id}
                     control={control}
                     state={controlStates?.[control.id]}

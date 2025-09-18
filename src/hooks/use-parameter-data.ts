@@ -1,44 +1,142 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+
 import { getLatestParameterData } from '@/actions/data';
-import { Parameter } from '@/lib/types';
+import type { Parameter } from '@/lib/types';
 
-const FETCH_INTERVAL_MS = 2500;
+const FALLBACK_FETCH_INTERVAL_MS = 5000;
+const STREAM_RETRY_DELAY_MS = 4000;
 
-export function useParameterData(parameter: Parameter, initialData: any | null = null) {
-  const [data, setData] = useState<any>(initialData);
-  const [isLoading, setIsLoading] = useState(!initialData);
+function hasInitialData(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  return value !== null && value !== undefined;
+}
+
+export function useParameterData<T = unknown>(
+  dashboardName: string,
+  parameter: Parameter,
+  initialData: T | null = null,
+) {
+  const [data, setData] = useState<T | null>(initialData);
+  const [isLoading, setIsLoading] = useState(!hasInitialData(initialData));
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    try {
-      // Don't set loading to true on subsequent fetches to avoid UI flicker
-      if (!data) {
-        setIsLoading(true);
-      }
-      setError(null);
-      const result = await getLatestParameterData(parameter);
-      setData(result);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      console.error(`Failed to fetch data for parameter ${parameter.id}:`, err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [parameter, data]); // Add `data` to dependencies to avoid flicker on first load
+  const parameterId = parameter.id;
+  const displayType = parameter.displayType;
 
   useEffect(() => {
-    // Fetch data immediately on component mount
-    fetchData();
+    let cancelled = false;
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    let awaitingFirstFetch = true;
 
-    // Then fetch data at the specified interval
-    const interval = setInterval(fetchData, FETCH_INTERVAL_MS);
+    const stopFallback = () => {
+      if (fallbackTimer) {
+        clearInterval(fallbackTimer);
+        fallbackTimer = null;
+      }
+    };
 
-    // Clean up the interval on component unmount
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    const fetchLatest = async () => {
+      try {
+        if (awaitingFirstFetch) {
+          setIsLoading(true);
+        }
+        setError(null);
+        const result = await getLatestParameterData(dashboardName, {
+          id: parameterId,
+          displayType,
+        });
+        if (cancelled) {
+          return;
+        }
+        if (result !== undefined) {
+          setData((result ?? null) as T | null);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        const message = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(message);
+        console.error(`Failed to fetch data for parameter ${parameterId}:`, err);
+      } finally {
+        awaitingFirstFetch = false;
+      }
+    };
+
+    const startFallback = () => {
+      if (!fallbackTimer) {
+        fallbackTimer = setInterval(fetchLatest, FALLBACK_FETCH_INTERVAL_MS);
+      }
+    };
+
+    const connectStream = () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      const url = new URL(
+        `/api/dashboards/${encodeURIComponent(dashboardName)}/parameters/${encodeURIComponent(parameterId)}/stream`,
+        window.location.origin,
+      );
+      url.searchParams.set('displayType', displayType);
+
+      const source = new EventSource(url.toString());
+      eventSource = source;
+
+      source.onopen = () => {
+        stopFallback();
+      };
+
+      source.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const nextData = payload?.data ?? payload;
+          if (!cancelled) {
+            setData((nextData ?? null) as T | null);
+            setIsLoading(false);
+            setError(null);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse parameter stream payload:', parseError);
+        }
+      };
+
+      source.onerror = () => {
+        if (cancelled) {
+          return;
+        }
+        source.close();
+        startFallback();
+        reconnectTimer = setTimeout(() => {
+          connectStream();
+        }, STREAM_RETRY_DELAY_MS);
+      };
+    };
+
+    fetchLatest();
+    connectStream();
+
+    return () => {
+      cancelled = true;
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      if (fallbackTimer) {
+        clearInterval(fallbackTimer);
+      }
+    };
+  }, [dashboardName, parameterId, displayType]);
 
   return { data, isLoading, error };
 }
