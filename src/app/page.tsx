@@ -96,7 +96,7 @@ function LandingContent() {
               asChild
               size="lg"
               variant="outline"
-              className="w-full border-white/40 text-white hover:bg-white/10 sm:w-auto"
+              className="w-full border-white/40 text-slate-800 hover:bg-white/10 sm:w-auto"
             >
               <Link href="/login">Log In</Link>
             </Button>

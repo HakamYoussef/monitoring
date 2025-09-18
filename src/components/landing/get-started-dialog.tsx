@@ -25,6 +25,7 @@ const InquiryFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Please enter your full name.' }),
   company: z.string().min(2, { message: 'Please enter your company or organization.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phoneNumber : z.string().max(13, {message: 'Please entre you phone number'}),
   projectDescription: z
     .string()
     .min(10, { message: 'Share a short description so we can prepare the right next steps.' })
@@ -47,6 +48,7 @@ export function GetStartedDialog({ triggerClassName }: GetStartedDialogProps) {
       fullName: '',
       company: '',
       email: '',
+      phoneNumber: '',
       projectDescription: '',
     },
   });
@@ -55,13 +57,14 @@ export function GetStartedDialog({ triggerClassName }: GetStartedDialogProps) {
     setIsSubmitting(true);
 
     try {
-      const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'support@smartmonitoring.app';
+      const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'touati.hakam.youssef@gmail.com';
       const subject = encodeURIComponent('Smart Monitoring Project Inquiry');
       const body = encodeURIComponent(
         [
           `Full Name: ${values.fullName}`,
           `Company: ${values.company}`,
           `Email: ${values.email}`,
+          `Phone: ${values.phoneNumber}`,
           '',
           'Project Description:',
           values.projectDescription,
@@ -128,6 +131,19 @@ export function GetStartedDialog({ triggerClassName }: GetStartedDialogProps) {
                   <FormLabel>Work Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+212 xxx-xxx-xxx" autoComplete="Number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
