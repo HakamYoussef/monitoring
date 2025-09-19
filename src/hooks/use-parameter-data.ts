@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { getLatestParameterData } from '@/actions/data';
 import type { Parameter } from '@/lib/types';
@@ -24,6 +24,7 @@ export function useParameterData<T = unknown>(
   const [data, setData] = useState<T | null>(initialData);
   const [isLoading, setIsLoading] = useState(!hasInitialData(initialData));
   const [error, setError] = useState<string | null>(null);
+  const lastUpdateVersionRef = useRef(0);
 
   const parameterId = parameter.id;
   const displayType = parameter.displayType;
@@ -42,6 +43,7 @@ export function useParameterData<T = unknown>(
         return;
       }
 
+      const fetchVersion = lastUpdateVersionRef.current;
       isFetching = true;
 
       try {
@@ -58,8 +60,11 @@ export function useParameterData<T = unknown>(
           return;
         }
         if (result !== undefined) {
-          setData((result ?? null) as T | null);
-          setIsLoading(false);
+          const hasStreamUpdate = lastUpdateVersionRef.current !== fetchVersion;
+          if (awaitingFirstFetch || !hasStreamUpdate) {
+            setData((result ?? null) as T | null);
+            setIsLoading(false);
+          }
         }
       } catch (err) {
         if (cancelled) {
@@ -107,6 +112,8 @@ export function useParameterData<T = unknown>(
             setData((nextData ?? null) as T | null);
             setIsLoading(false);
             setError(null);
+            lastUpdateVersionRef.current += 1;
+            awaitingFirstFetch = false;
           }
         } catch (parseError) {
           console.error('Failed to parse parameter stream payload:', parseError);
