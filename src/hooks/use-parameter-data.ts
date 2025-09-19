@@ -35,15 +35,15 @@ export function useParameterData<T = unknown>(
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let fallbackTimer: ReturnType<typeof setInterval> | null = null;
     let awaitingFirstFetch = true;
-
-    const stopFallback = () => {
-      if (fallbackTimer) {
-        clearInterval(fallbackTimer);
-        fallbackTimer = null;
-      }
-    };
+    let isFetching = false;
 
     const fetchLatest = async () => {
+      if (isFetching) {
+        return;
+      }
+
+      isFetching = true;
+
       try {
         if (awaitingFirstFetch) {
           setIsLoading(true);
@@ -70,12 +70,15 @@ export function useParameterData<T = unknown>(
         console.error(`Failed to fetch data for parameter ${parameterId}:`, err);
       } finally {
         awaitingFirstFetch = false;
+        isFetching = false;
       }
     };
 
-    const startFallback = () => {
+    const ensureFallback = () => {
       if (!fallbackTimer) {
-        fallbackTimer = setInterval(fetchLatest, FALLBACK_FETCH_INTERVAL_MS);
+        fallbackTimer = setInterval(() => {
+          void fetchLatest();
+        }, FALLBACK_FETCH_INTERVAL_MS);
       }
     };
 
@@ -96,10 +99,6 @@ export function useParameterData<T = unknown>(
       const source = new EventSource(url.toString());
       eventSource = source;
 
-      source.onopen = () => {
-        stopFallback();
-      };
-
       source.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
@@ -119,14 +118,15 @@ export function useParameterData<T = unknown>(
           return;
         }
         source.close();
-        startFallback();
+        ensureFallback();
         reconnectTimer = setTimeout(() => {
           connectStream();
         }, STREAM_RETRY_DELAY_MS);
       };
     };
 
-    fetchLatest();
+    void fetchLatest();
+    ensureFallback();
     connectStream();
 
     return () => {
