@@ -15,3 +15,11 @@ export function getParameterCollectionName(dashboard: string): string {
 export function getControlCollectionName(dashboard: string): string {
   return `${sanitizeSegment(dashboard)}_Control`;
 }
+
+export function getConfigParameterCollectionName(dashboard: string): string {
+  return `${sanitizeSegment(dashboard)}-parameter`;
+}
+
+export function getConfigControlCollectionName(dashboard: string): string {
+  return `${sanitizeSegment(dashboard)}-control`;
+}
