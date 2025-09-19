@@ -1,6 +1,6 @@
 'use server';
 
-import { Collection } from 'mongodb';
+import type { Collection, Document } from 'mongodb';
 import { notFound } from 'next/navigation';
 
 import {
@@ -10,8 +10,67 @@ import {
 import { getCollection, isMongoConfigured } from '@/lib/mongodb';
 import { Config, ConfigSchema, Control, Parameter } from '@/lib/types';
 
-type ParameterDocument = Parameter & { order: number };
-type ControlDocument = Control & { order: number };
+type ParameterDocument = Parameter & { order?: number };
+type ControlDocument = Control & { order?: number };
+
+function sanitizeDocumentKey(
+  rawValue: string | undefined,
+  fallback: string,
+  usedKeys: Set<string>,
+): string {
+  const trimmed = typeof rawValue === 'string' ? rawValue.trim() : '';
+  const withoutSpecialChars = trimmed.replace(/\$/g, '').replace(/\./g, '_');
+  const base = withoutSpecialChars || fallback;
+
+  let candidate = base;
+  let suffix = 2;
+
+  while (usedKeys.has(candidate)) {
+    candidate = `${base}_${suffix++}`;
+  }
+
+  usedKeys.add(candidate);
+  return candidate;
+}
+
+function buildParameterDefaults(parameters: Parameter[]): Record<string, number> {
+  const defaults: Record<string, number> = {};
+  const usedKeys = new Set<string>();
+
+  parameters.forEach((parameter, index) => {
+    const fallback = `parameter_${index + 1}`;
+    const key = sanitizeDocumentKey(parameter.name, fallback, usedKeys);
+    defaults[key] = 0;
+  });
+
+  return defaults;
+}
+
+function resolveControlDefaultValue(control: Control): unknown {
+  switch (control.type) {
+    case 'threshold':
+      return control.threshold ?? 0;
+    case 'toggle':
+      return control.defaultState ?? false;
+    case 'refresh':
+    default:
+      return 0;
+  }
+}
+
+function buildControlDefaults(controls: Control[]): Record<string, unknown> {
+  const defaults: Record<string, unknown> = {};
+  const usedKeys = new Set<string>();
+
+  controls.forEach((control, index) => {
+    const fallback = `control_${index + 1}`;
+    const preferredKey = control.label && control.label.trim() ? control.label : control.id;
+    const key = sanitizeDocumentKey(preferredKey, fallback, usedKeys);
+    defaults[key] = resolveControlDefaultValue(control);
+  });
+
+  return defaults;
+}
 
 async function getConfigCollection(): Promise<Collection<Config> | null> {
   if (!isMongoConfigured()) return null;
@@ -20,14 +79,14 @@ async function getConfigCollection(): Promise<Collection<Config> | null> {
 
 async function getParameterDefinitionCollection(
   configName: string,
-): Promise<Collection<ParameterDocument> | null> {
-  return getCollection<ParameterDocument>(getConfigParameterCollectionName(configName));
+): Promise<Collection<Document> | null> {
+  return getCollection<Document>(getConfigParameterCollectionName(configName));
 }
 
 async function getControlDefinitionCollection(
   configName: string,
-): Promise<Collection<ControlDocument> | null> {
-  return getCollection<ControlDocument>(getConfigControlCollectionName(configName));
+): Promise<Collection<Document> | null> {
+  return getCollection<Document>(getConfigControlCollectionName(configName));
 }
 
 async function loadParameterDefinitions(configName: string): Promise<Parameter[]> {
@@ -38,15 +97,21 @@ async function loadParameterDefinitions(configName: string): Promise<Parameter[]
 
   try {
     const documents = await collection
-      .find({}, { sort: { order: 1, _id: 1 } })
+      .find<Record<string, unknown>>({}, { sort: { order: 1, _id: 1 } })
       .toArray();
 
-    return documents.map((document) => {
-      const { order, _id, ...rest } = document;
-      void order;
-      void _id;
-      return rest as Parameter;
+    const parameters: Parameter[] = [];
+
+    documents.forEach((document) => {
+      if (document && typeof document === 'object' && 'id' in document && typeof document.id === 'string') {
+        const { order, _id, ...rest } = document as ParameterDocument & { _id?: unknown };
+        void order;
+        void _id;
+        parameters.push(rest as Parameter);
+      }
     });
+
+    return parameters;
   } catch (error) {
     console.error(`Failed to load parameter definitions for '${configName}':`, error);
     return [];
@@ -61,15 +126,21 @@ async function loadControlDefinitions(configName: string): Promise<Control[]> {
 
   try {
     const documents = await collection
-      .find({}, { sort: { order: 1, _id: 1 } })
+      .find<Record<string, unknown>>({}, { sort: { order: 1, _id: 1 } })
       .toArray();
 
-    return documents.map((document) => {
-      const { order, _id, ...rest } = document;
-      void order;
-      void _id;
-      return rest as Control;
+    const controls: Control[] = [];
+
+    documents.forEach((document) => {
+      if (document && typeof document === 'object' && 'id' in document && typeof document.id === 'string') {
+        const { order, _id, ...rest } = document as ControlDocument & { _id?: unknown };
+        void order;
+        void _id;
+        controls.push(rest as Control);
+      }
     });
+
+    return controls;
   } catch (error) {
     console.error(`Failed to load control definitions for '${configName}':`, error);
     return [];
@@ -82,22 +153,11 @@ async function syncParameterDefinitions(configName: string, parameters: Paramete
     throw new Error('Database not configured or connection failed.');
   }
 
-  await collection.createIndex({ id: 1 }, { unique: true });
+  const defaults = buildParameterDefaults(parameters);
+  const document = { _id: 'defaults', ...defaults };
 
-  for (const [index, parameter] of parameters.entries()) {
-    await collection.updateOne(
-      { id: parameter.id },
-      { $set: { ...parameter, order: index } },
-      { upsert: true },
-    );
-  }
-
-  if (parameters.length > 0) {
-    const ids = parameters.map((parameter) => parameter.id);
-    await collection.deleteMany({ id: { $nin: ids } });
-  } else {
-    await collection.deleteMany({});
-  }
+  await collection.replaceOne({ _id: 'defaults' }, document, { upsert: true });
+  await collection.deleteMany({ _id: { $ne: 'defaults' } });
 }
 
 async function syncControlDefinitions(configName: string, controls: Control[]): Promise<void> {
@@ -106,22 +166,11 @@ async function syncControlDefinitions(configName: string, controls: Control[]): 
     throw new Error('Database not configured or connection failed.');
   }
 
-  await collection.createIndex({ id: 1 }, { unique: true });
+  const defaults = buildControlDefaults(controls);
+  const document = { _id: 'defaults', ...defaults };
 
-  for (const [index, control] of controls.entries()) {
-    await collection.updateOne(
-      { id: control.id },
-      { $set: { ...control, order: index } },
-      { upsert: true },
-    );
-  }
-
-  if (controls.length > 0) {
-    const ids = controls.map((control) => control.id);
-    await collection.deleteMany({ id: { $nin: ids } });
-  } else {
-    await collection.deleteMany({});
-  }
+  await collection.replaceOne({ _id: 'defaults' }, document, { upsert: true });
+  await collection.deleteMany({ _id: { $ne: 'defaults' } });
 }
 
 async function dropCollectionIfExists(collectionName: string): Promise<void> {
