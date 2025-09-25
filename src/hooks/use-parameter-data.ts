@@ -28,7 +28,8 @@ export function useParameterData<T = unknown>(
 
   const parameterId = parameter.id;
   const displayType = parameter.displayType;
-  const valueKey = parameter.name?.trim() ? parameter.name.trim() : parameter.id;
+  // Mirror the server's default identifier so lookups use the persisted key.
+  const valueKey = parameterId;
 
   useEffect(() => {
     let cancelled = false;
@@ -97,9 +98,7 @@ export function useParameterData<T = unknown>(
         window.location.origin,
       );
       url.searchParams.set('displayType', displayType);
-      if (valueKey) {
-        url.searchParams.set('valueKey', valueKey);
-      }
+      url.searchParams.set('valueKey', valueKey);
 
       const source = new EventSource(url.toString());
       eventSource = source;

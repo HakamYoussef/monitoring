@@ -17,10 +17,12 @@ export async function getLatestParameterData(
   parameter: ParameterDescriptor,
 ): Promise<unknown> {
   try {
+    // Ensure the identifier aligns with the server default when no override is provided.
+    const valueKey = parameter.valueKey?.trim() || parameter.id;
     const payload = await getParameterData(dashboardName, {
       id: parameter.id,
       displayType: parameter.displayType,
-      valueKey: parameter.valueKey,
+      valueKey,
     });
     return payload;
   } catch (error) {
